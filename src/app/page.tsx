@@ -9,6 +9,7 @@ import { ProfileFilters } from '@/components/profile/ProfileFilters';
 import { PaginationControls } from '@/components/common/PaginationControls';
 import { useToast } from '@/hooks/use-toast';
 import { Providers } from './providers'; // Import the Providers component
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 const PROFILES_PER_PAGE = 10;
 
@@ -27,11 +28,12 @@ function HomePageContent() {
   });
 
    // Fetch all profiles initially to populate filter options (can be optimized)
-   const { data: allProfilesData } = useQuery({
-        queryKey: ['allProfilesForOptions'],
+   // Use a distinct query key to avoid conflicts
+   const { data: allProfilesData, isLoading: isLoadingAllProfiles } = useQuery({
+        queryKey: ['allProfilesForFilterOptions'], // Distinct query key
         queryFn: () => fetchProfiles({}, '', 'name', 1, 1000), // Fetch a large number
         enabled: !isLoadingStatuses, // Only run when statuses are loaded
-        staleTime: Infinity, // Keep this data fresh indefinitely for options
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes, adjust as needed
     });
 
   // Fetch profiles based on filters, search, sort, and pagination
@@ -53,7 +55,7 @@ function HomePageContent() {
         });
         // Invalidate queries to refetch data
         queryClient.invalidateQueries({ queryKey: ['profiles'] });
-        queryClient.invalidateQueries({ queryKey: ['allProfilesForOptions'] });
+        queryClient.invalidateQueries({ queryKey: ['allProfilesForFilterOptions'] }); // Invalidate filter options query
          // Reset to page 1 if the last item on the current page was deleted
          if (profilesData?.data.length === 1 && currentPage > 1) {
              setCurrentPage(currentPage - 1);
@@ -96,27 +98,43 @@ function HomePageContent() {
   const totalProfiles = profilesData?.total ?? 0;
   const totalPages = Math.ceil(totalProfiles / PROFILES_PER_PAGE);
 
-  // Prepare initial filters with all profiles for options
-  const initialFilterOptions = React.useMemo(() => ({
-        ...filters,
-        _profilesForOptions: allProfilesData?.data ?? []
-    }), [filters, allProfilesData]);
+  // Prepare initial filters *without* _profilesForOptions for the ProfileFilters component
+  // Pass _profilesForOptions separately if needed by the component internally
+  const initialFilterValues = React.useMemo(() => ({
+        ...filters, // Current active filters
+    }), [filters]);
+
+  const profileOptionsForFilters = React.useMemo(() => ({
+      _profilesForOptions: allProfilesData?.data ?? []
+  }), [allProfilesData]);
 
 
   return (
     <MainLayout title="Matrimony Profiles" showAddButton={true}>
-       {/* Only render filters once statuses and initial profile options are loaded */}
-       {!isLoadingStatuses && allProfilesData ? (
+       {/* Show Skeleton or Loading state while statuses or all profiles are loading */}
+       {isLoadingStatuses || isLoadingAllProfiles ? (
+          <div className="mb-6 p-4 border rounded-lg bg-card space-y-4 h-[180px]"> {/* Adjusted height */}
+                <Skeleton className="h-6 w-1/4 mb-2" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
+                    {[...Array(6)].map((_, i) => (
+                         <div key={i} className="space-y-1">
+                             <Skeleton className="h-4 w-1/3" />
+                             <Skeleton className="h-10 w-full" />
+                         </div>
+                    ))}
+                </div>
+                 <div className="flex justify-end pt-2">
+                    <Skeleton className="h-8 w-32" />
+                </div>
+            </div>
+        ) : (
           <ProfileFilters
             statuses={statuses}
-            initialFilters={initialFilterOptions}
+            initialFilters={profileOptionsForFilters} // Pass options data
+            // initialFilters={initialFilterValues} // Pass only active filter values
             onFilterChange={handleFilterChange}
             onSearchChange={handleSearchChange}
           />
-        ) : (
-            <div className="mb-6 p-4 border rounded-lg bg-card h-40 animate-pulse"> {/* Placeholder */}
-                Loading filters...
-            </div>
         )}
 
       {profilesError ? (
@@ -127,13 +145,15 @@ function HomePageContent() {
              profiles={profilesData?.data ?? []}
              statuses={statuses}
              onDelete={handleDeleteProfile}
-             isLoading={isLoadingProfiles || deleteMutation.isPending}
+             isLoading={isLoadingProfiles || deleteMutation.isPending} // Consider initial profile load as well
           />
-          <PaginationControls
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
+          {totalPages > 1 && ( // Only show pagination if there's more than one page
+             <PaginationControls
+               currentPage={currentPage}
+               totalPages={totalPages}
+               onPageChange={handlePageChange}
+             />
+          )}
         </>
       )}
     </MainLayout>
