@@ -36,21 +36,26 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
   const router = useRouter();
   const { toast } = useToast();
 
+   const defaultValues = {
+        name: profile?.name ?? '',
+        casteRaise: profile?.casteRaise ?? '',
+        age: profile?.age ?? undefined, // Ensure number type or undefined
+        star: profile?.star ?? '',
+        city: profile?.city ?? '',
+        state: profile?.state ?? '',
+        starMatchScore: profile?.starMatchScore ?? undefined, // Ensure number type or undefined
+        mobileNumber: profile?.mobileNumber ?? '',
+        statusId: profile?.statusId ?? '',
+        matrimonyId: profile?.matrimonyId ?? '',
+        comments: profile?.comments ?? '',
+      };
+
+   console.log("ProfileForm defaultValues:", defaultValues); // Log default values
+
   const form = useForm({
-    defaultValues: {
-      name: profile?.name ?? '',
-      casteRaise: profile?.casteRaise ?? '',
-      age: profile?.age ?? undefined, // Ensure number type or undefined
-      star: profile?.star ?? '',
-      city: profile?.city ?? '',
-      state: profile?.state ?? '',
-      starMatchScore: profile?.starMatchScore ?? undefined, // Ensure number type or undefined
-      mobileNumber: profile?.mobileNumber ?? '',
-      statusId: profile?.statusId ?? '',
-      matrimonyId: profile?.matrimonyId ?? '',
-      comments: profile?.comments ?? '',
-    },
+    defaultValues: defaultValues,
     onSubmit: async ({ value }) => {
+        console.log("ProfileForm onSubmit value:", value); // Log value before submitting
         await onSubmit(value);
     },
     validatorAdapter: zodValidator(),
@@ -74,6 +79,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          console.log("Native form onSubmit triggered"); // Log native form submit
           form.handleSubmit();
         }}
       >
@@ -91,12 +97,15 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(e) => {
+                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      field.handleChange(e.target.value);
+                  }}
                   placeholder="Full Name"
                   required
                 />
                 {field.state.meta.touchedErrors ? (
-                  <em className="text-xs text-destructive">{field.state.meta.touchedErrors}</em>
+                  <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                 ) : null}
               </div>
             )}
@@ -115,12 +124,15 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={(e) => {
+                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      field.handleChange(e.target.value);
+                  }}
                   placeholder="Caste or Community"
                   required
                 />
                 {field.state.meta.touchedErrors ? (
-                  <em className="text-xs text-destructive">{field.state.meta.touchedErrors}</em>
+                  <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                 ) : null}
               </div>
             )}
@@ -138,16 +150,22 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                   <Input
                     id={field.name}
                     name={field.name}
-                    value={field.state.value ?? ''} // Handle undefined
+                    value={field.state.value ?? ''} // Handle undefined for controlled input
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value === '' ? undefined : parseInt(e.target.value, 10))}
+                    onChange={(e) => {
+                        const rawValue = e.target.value;
+                        const parsedValue = parseInt(rawValue, 10);
+                        const valueToSet = rawValue === '' ? undefined : (isNaN(parsedValue) ? field.state.value : parsedValue); // Keep current value if NaN, allow empty string to become undefined
+                        console.log(`Field ${field.name} changed. Raw: ${rawValue}, Parsed: ${parsedValue}, Setting:`, valueToSet);
+                        field.handleChange(valueToSet);
+                    }}
                     type="number"
                     placeholder="Age"
                     required
                     min="18"
                   />
                   {field.state.meta.touchedErrors ? (
-                    <em className="text-xs text-destructive">{field.state.meta.touchedErrors}</em>
+                    <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                   ) : null}
                 </div>
               )}
@@ -166,12 +184,15 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                     name={field.name}
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                     onChange={(e) => {
+                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      field.handleChange(e.target.value);
+                  }}
                     placeholder="Birth Star (Nakshatra)"
                     required
                   />
                   {field.state.meta.touchedErrors ? (
-                    <em className="text-xs text-destructive">{field.state.meta.touchedErrors}</em>
+                    <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                   ) : null}
                 </div>
               )}
@@ -192,12 +213,15 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                     name={field.name}
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                     onChange={(e) => {
+                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      field.handleChange(e.target.value);
+                  }}
                     placeholder="City"
                     required
                   />
                   {field.state.meta.touchedErrors ? (
-                    <em className="text-xs text-destructive">{field.state.meta.touchedErrors}</em>
+                    <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                   ) : null}
                 </div>
               )}
@@ -216,12 +240,15 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                     name={field.name}
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                     onChange={(e) => {
+                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      field.handleChange(e.target.value);
+                  }}
                     placeholder="State"
                     required
                   />
                   {field.state.meta.touchedErrors ? (
-                    <em className="text-xs text-destructive">{field.state.meta.touchedErrors}</em>
+                    <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                   ) : null}
                 </div>
               )}
@@ -242,7 +269,13 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                         name={field.name}
                         value={field.state.value ?? ''} // Handle undefined
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                         onChange={(e) => {
+                             const rawValue = e.target.value;
+                             const parsedValue = parseFloat(rawValue);
+                             const valueToSet = rawValue === '' ? undefined : (isNaN(parsedValue) ? field.state.value : parsedValue); // Keep current value if NaN, allow empty string to become undefined
+                             console.log(`Field ${field.name} changed. Raw: ${rawValue}, Parsed: ${parsedValue}, Setting:`, valueToSet);
+                             field.handleChange(valueToSet);
+                         }}
                         type="number"
                         step="0.1"
                         min="0"
@@ -251,7 +284,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                         required
                       />
                       {field.state.meta.touchedErrors ? (
-                        <em className="text-xs text-destructive">{field.state.meta.touchedErrors}</em>
+                        <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                       ) : null}
                     </div>
                   )}
@@ -267,22 +300,30 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                         <Label htmlFor={field.name}>Status</Label>
                         <Select
                             value={field.state.value}
-                            onValueChange={(value) => field.handleChange(value)}
+                            onValueChange={(value) => {
+                                console.log(`Field ${field.name} changed to:`, value);
+                                field.handleChange(value);
+                            }}
                             required
                         >
                             <SelectTrigger id={field.name}>
                             <SelectValue placeholder="Select status" />
                             </SelectTrigger>
                             <SelectContent>
-                            {statuses.map((status) => (
-                                <SelectItem key={status.id} value={status.id}>
-                                {status.name}
-                                </SelectItem>
-                            ))}
+                             {/* Ensure statuses are loaded and available */}
+                             {!statuses || statuses.length === 0 ? (
+                                 <SelectItem value="loading" disabled>Loading statuses...</SelectItem>
+                             ) : (
+                                 statuses.map((status) => (
+                                     <SelectItem key={status.id} value={status.id}>
+                                     {status.name}
+                                     </SelectItem>
+                                 ))
+                             )}
                             </SelectContent>
                         </Select>
                          {field.state.meta.touchedErrors ? (
-                           <em className="text-xs text-destructive">{field.state.meta.touchedErrors}</em>
+                           <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                          ) : null}
                         </div>
                     )}
@@ -303,13 +344,16 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                   onChange={(e) => {
+                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      field.handleChange(e.target.value);
+                  }}
                   placeholder="+91XXXXXXXXXX"
                   type="tel"
                   required
                 />
                  {field.state.meta.touchedErrors ? (
-                   <em className="text-xs text-destructive">{field.state.meta.touchedErrors}</em>
+                   <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                  ) : null}
               </div>
             )}
@@ -328,12 +372,15 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                   name={field.name}
                   value={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                   onChange={(e) => {
+                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      field.handleChange(e.target.value);
+                  }}
                   placeholder="Matrimony Site Profile ID"
                   required
                 />
                  {field.state.meta.touchedErrors ? (
-                   <em className="text-xs text-destructive">{field.state.meta.touchedErrors}</em>
+                   <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                  ) : null}
               </div>
             )}
@@ -352,11 +399,14 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                   name={field.name}
                   value={field.state.value ?? ''} // Handle potentially undefined value
                   onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
+                  onChange={(e) => {
+                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      field.handleChange(e.target.value);
+                  }}
                   placeholder="Any additional notes or comments"
                 />
                  {field.state.meta.touchedErrors ? (
-                   <em className="text-xs text-destructive">{field.state.meta.touchedErrors}</em>
+                   <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                  ) : null}
               </div>
             )}
@@ -368,12 +418,17 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
           </Button>
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting]}
-            children={([canSubmit, isSubmitting]) => (
-                <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {profile ? 'Update Profile' : 'Add Profile'}
-                </Button>
-            )}
+            children={([canSubmit, formIsSubmitting]) => {
+                // Log form state for debugging submission button
+                // console.log("Form State for Submit Button:", { canSubmit, formIsSubmitting, isSubmittingProp: isSubmitting });
+                const actualIsSubmitting = formIsSubmitting || isSubmitting; // Combine TanStack Form state and prop
+                return (
+                     <Button type="submit" disabled={!canSubmit || actualIsSubmitting}>
+                         {actualIsSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                         {profile ? 'Update Profile' : 'Add Profile'}
+                     </Button>
+                 );
+            }}
            />
         </CardFooter>
       </form>

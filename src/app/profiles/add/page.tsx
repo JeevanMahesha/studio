@@ -36,19 +36,27 @@ function AddProfilePageContent() {
                 description: `Profile for ${data.name} has been successfully created.`,
             });
             queryClient.invalidateQueries({ queryKey: ['profiles'] }); // Refetch profile list
-            queryClient.invalidateQueries({ queryKey: ['allProfilesForOptions'] }); // Refetch filter options
+            queryClient.invalidateQueries({ queryKey: ['allProfilesForFilterOptions'] }); // Refetch filter options
             router.push('/'); // Redirect to home page
         },
         onError: (error) => {
+             let description = 'Could not add the profile.';
+             if (error instanceof z.ZodError) {
+                 // Format Zod errors for better readability
+                 description = "Validation failed: " + error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
+             } else if (error instanceof Error) {
+                 description = error.message;
+             }
             toast({
                 title: 'Error Adding Profile',
-                description: error.message || 'Could not add the profile.',
+                description: description,
                 variant: 'destructive',
             });
         },
     });
 
     const handleSubmit = async (data: ProfileCreateData) => {
+        console.log("Form submitted with data:", data); // Log form data on submit
         await mutation.mutateAsync(data);
     };
 

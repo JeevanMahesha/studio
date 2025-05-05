@@ -21,6 +21,7 @@ import {
 } from 'firebase/firestore';
 import { db, profilesCollection, statusesCollection } from '@/lib/firebase';
 import { Profile, ProfileStatus, ProfileSchema } from '@/types/profile'; // Import the Zod schema
+import { z } from 'zod'; // Import z
 
 // Helper to convert Firestore Timestamps to Dates in profile data
 const profileFromDoc = (doc: DocumentSnapshot<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'> & { createdAt?: Timestamp, updatedAt?: Timestamp }>): Profile => {
@@ -29,12 +30,19 @@ const profileFromDoc = (doc: DocumentSnapshot<Omit<Profile, 'id' | 'createdAt' |
     throw new Error("Document data is missing");
   }
   // Validate data against schema before processing timestamps
-  const validatedData = ProfileSchema.omit({ id: true }).parse({
-    ...data,
-    // Convert Timestamps back to Dates for client-side use
-    createdAt: data.createdAt?.toDate(),
-    updatedAt: data.updatedAt?.toDate(),
-  });
+   // Temporarily allow any type for timestamps before validation
+    const dataWithPotentiallyAnyTimestamps = {
+        ...data,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+    };
+
+   const validatedData = ProfileSchema.omit({ id: true }).parse({
+      ...dataWithPotentiallyAnyTimestamps,
+      // Convert Timestamps back to Dates for client-side use AFTER validation if they exist
+      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : undefined,
+      updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : undefined,
+   });
 
   return {
     ...validatedData,
@@ -53,17 +61,32 @@ const statusFromDoc = (doc: QueryDocumentSnapshot<Omit<ProfileStatus, 'id'>>): P
 
 // Helper to prepare profile data for Firestore (convert Dates to Timestamps)
 const prepareProfileForFirestore = (profileData: Partial<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'>>) => {
-    const data: Partial<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'> & { createdAt?: any, updatedAt?: any }> = { ...profileData };
+    const data: Partial<Omit<Profile, 'id'> & { createdAt?: any, updatedAt?: any }> = { ...profileData };
 
-    // Use serverTimestamp() for creation and updates
-    if (!data.createdAt) { // Only set createdAt on creation implicitly
+    // Remove id if present, as it's managed by Firestore doc ID
+    delete data.id;
+
+    // Convert Date objects back to Timestamps if they exist (shouldn't usually be needed if using serverTimestamp)
+    // if (data.createdAt instanceof Date) {
+    //     data.createdAt = Timestamp.fromDate(data.createdAt);
+    // }
+    // if (data.updatedAt instanceof Date) {
+    //     data.updatedAt = Timestamp.fromDate(data.updatedAt);
+    // }
+
+     // Use serverTimestamp() for creation and updates
+     // For add, serverTimestamp() will set both createdAt and updatedAt
+     // For update, it will only set updatedAt
+    if (!data.createdAt) { // Let Firestore handle createdAt on initial add
         data.createdAt = serverTimestamp();
     }
-    data.updatedAt = serverTimestamp(); // Always set updatedAt
+    data.updatedAt = serverTimestamp(); // Always set/update updatedAt
+
 
     // Remove undefined fields explicitly, Firestore doesn't store them anyway, but this keeps it clean
     Object.keys(data).forEach(key => data[key as keyof typeof data] === undefined && delete data[key as keyof typeof data]);
 
+    console.log("Prepared data for Firestore:", data); // Log prepared data
     return data;
 };
 
@@ -81,77 +104,72 @@ export const fetchProfiles = async (
     limitValue: number = 10,
     // lastVisibleDoc: DocumentSnapshot | null = null // Alternative pagination cursor
 ): Promise<{ data: Profile[], total: number, lastVisibleDoc?: DocumentSnapshot }> => {
-    await delay(500); // Simulate latency
+    // await delay(500); // Simulate latency - Removed for faster debugging
 
     const constraints: QueryConstraint[] = [];
 
     // Search Term Filter (Simple prefix search on 'name')
-    // Firestore doesn't support case-insensitive 'contains' directly.
-    // For robust search, consider dedicated search services (e.g., Algolia, Typesense)
-    // or use tricks like storing lowercase versions of fields.
-    // This is a basic prefix search:
     if (searchTerm) {
-        const endTerm = searchTerm + '\uf8ff'; // High Unicode character for prefix range
+        const endTerm = searchTerm + '\uf8ff';
         constraints.push(where('name', '>=', searchTerm));
         constraints.push(where('name', '<=', endTerm));
-        // Note: Combining prefix search with other filters might require composite indexes.
-        // Also, sorting by a different field than the one used in range filter (`name`) requires a specific index.
     }
 
 
     // Apply other filters
     Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== '') {
-             // Special handling for numeric fields if necessary (e.g., age, score ranges)
              if (key === 'age' || key === 'starMatchScore') {
-                 // Example: if filters.age is a number, match exactly
                  if (typeof value === 'number') {
                      constraints.push(where(key, '==', value));
                  }
-                 // Add range filtering logic here if needed
              } else {
-                 // Assume exact match for other fields (like statusId, city, state, etc.)
                  constraints.push(where(key, '==', value));
              }
         }
     });
 
     // --- Total Count ---
-     // Create a query for counting that includes all filters but no sorting/pagination
-     const countQueryConstraints = constraints.filter(c => !c.type.startsWith('orderBy')); // Remove orderBy for count
+     const countQueryConstraints = constraints.filter(c => !c.type.startsWith('orderBy'));
      const countQuery = query(profilesCollection, ...countQueryConstraints);
      const countSnapshot = await getCountFromServer(countQuery);
      const total = countSnapshot.data().count;
 
 
     // --- Fetch Paginated Data ---
-    // Sorting
-    constraints.push(orderBy(sortBy)); // Add sorting
+    constraints.push(orderBy(sortBy));
 
-    // Pagination using page number (requires fetching previous pages' last docs - less efficient)
-    // Or using lastVisibleDoc (more efficient cursor-based pagination)
     let paginatedQuery = query(profilesCollection, ...constraints, limit(limitValue));
     let lastVisibleDoc: DocumentSnapshot | null = null;
 
-     // Calculate offset - Inefficient for large datasets in Firestore
      if (page > 1) {
          const offsetLimit = (page - 1) * limitValue;
+         // Fetch only the last document of the previous page efficiently
          const previousDocsQuery = query(profilesCollection, ...constraints, limit(offsetLimit));
          const previousDocsSnapshot = await getDocs(previousDocsQuery);
+
          if (!previousDocsSnapshot.empty) {
              const lastDocOfPreviousPage = previousDocsSnapshot.docs[previousDocsSnapshot.docs.length - 1];
+             console.log("Paginating after doc:", lastDocOfPreviousPage.id);
              paginatedQuery = query(profilesCollection, ...constraints, startAfter(lastDocOfPreviousPage), limit(limitValue));
-         } else {
-             // Requested page is beyond the total number of documents, return empty
-              return { data: [], total, lastVisibleDoc: undefined };
+         } else if (offsetLimit > 0) { // Only return empty if offset > 0 and no docs found
+             console.log("Requested page beyond total documents.");
+             return { data: [], total, lastVisibleDoc: undefined };
          }
      }
 
 
     const querySnapshot = await getDocs(paginatedQuery);
-    const profiles: Profile[] = querySnapshot.docs.map(profileFromDoc);
+    const profiles: Profile[] = querySnapshot.docs.map(doc => {
+        try {
+            return profileFromDoc(doc as DocumentSnapshot<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'> & { createdAt?: Timestamp, updatedAt?: Timestamp }>);
+        } catch (error) {
+            console.error(`Error processing profile doc ${doc.id}:`, error);
+            // Return a placeholder or skip the doc
+            return null;
+        }
+    }).filter((p): p is Profile => p !== null); // Filter out any nulls from errors
 
-    // Get the last visible document for cursor-based pagination if needed
     if (!querySnapshot.empty) {
         lastVisibleDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
     }
@@ -161,57 +179,96 @@ export const fetchProfiles = async (
 };
 
 export const fetchProfileById = async (id: string): Promise<Profile | undefined> => {
-    await delay(300);
-    const docRef = doc(db, 'profiles', id); // Correctly reference the document
+    // await delay(300);
+    const docRef = doc(db, 'profiles', id);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-        return profileFromDoc(docSnap as DocumentSnapshot<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'> & { createdAt?: Timestamp, updatedAt?: Timestamp }>);
+       try {
+           return profileFromDoc(docSnap as DocumentSnapshot<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'> & { createdAt?: Timestamp, updatedAt?: Timestamp }>);
+       } catch (error) {
+            console.error(`Error processing profile doc ${id}:`, error);
+            return undefined; // Or re-throw if needed
+       }
     } else {
         return undefined;
     }
 };
 
 export const addProfile = async (profileData: Omit<Profile, 'id' | 'createdAt' | 'updatedAt'>): Promise<Profile> => {
-    await delay(400);
-     // Validate data before sending to Firestore
-    const validatedData = ProfileSchema.omit({ id: true, createdAt: true, updatedAt: true }).parse(profileData);
-    const dataToSave = prepareProfileForFirestore(validatedData);
+    // await delay(400);
+    console.log("Received profile data in addProfile:", profileData); // Log received data
 
-    const docRef = await addDoc(profilesCollection, dataToSave);
-    const newDocSnap = await getDoc(docRef); // Fetch the newly added doc to get server timestamp
-    return profileFromDoc(newDocSnap as DocumentSnapshot<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'> & { createdAt?: Timestamp, updatedAt?: Timestamp }>);
+    try {
+        // Validate data before sending to Firestore
+        const validatedData = ProfileSchema.omit({ id: true, createdAt: true, updatedAt: true }).parse(profileData);
+        console.log("Validated profile data:", validatedData);
+
+        const dataToSave = prepareProfileForFirestore(validatedData);
+        console.log("Data being sent to Firestore:", dataToSave);
+
+        const docRef = await addDoc(profilesCollection, dataToSave);
+        console.log("Document written with ID: ", docRef.id);
+
+        const newDocSnap = await getDoc(docRef); // Fetch the newly added doc to get server timestamp
+        if (!newDocSnap.exists()) {
+             console.error("Failed to fetch newly added document immediately after creation.");
+             throw new Error("Failed to fetch newly added profile.");
+        }
+        console.log("Fetched new document snapshot:", newDocSnap.data());
+
+        const newProfile = profileFromDoc(newDocSnap as DocumentSnapshot<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'> & { createdAt?: Timestamp, updatedAt?: Timestamp }>);
+        console.log("Processed new profile from snapshot:", newProfile);
+        return newProfile;
+
+    } catch (error) {
+        console.error("Error in addProfile:", error);
+         if (error instanceof z.ZodError) {
+             console.error("Zod Validation Errors:", error.errors);
+         }
+         // Re-throw the error so the mutation's onError handler can catch it
+        throw error;
+    }
 };
 
 export const updateProfile = async (id: string, profileData: Partial<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Profile | undefined> => {
-    await delay(400);
+    // await delay(400);
     const docRef = doc(db, 'profiles', id);
 
-     // Fetch current doc to ensure it exists before attempting update
      const currentDoc = await getDoc(docRef);
      if (!currentDoc.exists()) {
          console.error(`Profile with id ${id} not found for update.`);
          return undefined;
      }
 
-    // Validate partial data - Zod's .partial() might be useful here if needed
-    // For simplicity, we assume incoming data structure is correct, but validation is recommended
-    const dataToUpdate = prepareProfileForFirestore(profileData);
+    try {
+        // --- Add partial validation if needed ---
+        // const validatedPartialData = ProfileSchema.partial().omit({ id: true, createdAt: true, updatedAt:true }).parse(profileData);
+        // const dataToUpdate = prepareProfileForFirestore(validatedPartialData);
+         const dataToUpdate = prepareProfileForFirestore(profileData); // Using original for now
 
-    await updateDoc(docRef, dataToUpdate);
-    const updatedDocSnap = await getDoc(docRef); // Fetch the updated doc
-    return profileFromDoc(updatedDocSnap as DocumentSnapshot<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'> & { createdAt?: Timestamp, updatedAt?: Timestamp }>);
+        await updateDoc(docRef, dataToUpdate);
+        const updatedDocSnap = await getDoc(docRef);
+        return profileFromDoc(updatedDocSnap as DocumentSnapshot<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'> & { createdAt?: Timestamp, updatedAt?: Timestamp }>);
+    } catch (error) {
+         console.error(`Error updating profile ${id}:`, error);
+         if (error instanceof z.ZodError) {
+              console.error("Zod Validation Errors:", error.errors);
+         }
+         throw error; // Re-throw for mutation handler
+    }
 };
 
 export const deleteProfile = async (id: string): Promise<boolean> => {
-    await delay(600);
+    // await delay(600);
     const docRef = doc(db, 'profiles', id);
     try {
         await deleteDoc(docRef);
+        console.log(`Profile ${id} deleted successfully.`);
         return true;
     } catch (error) {
-        console.error("Error deleting profile: ", error);
-        return false;
+        console.error(`Error deleting profile ${id}: `, error);
+        return false; // Don't re-throw, allow UI to handle false return
     }
 };
 
@@ -219,59 +276,82 @@ export const deleteProfile = async (id: string): Promise<boolean> => {
 // --- Status API ---
 
 export const fetchStatuses = async (): Promise<ProfileStatus[]> => {
-    await delay(200);
-    const q = query(statusesCollection, orderBy('name')); // Optionally order statuses
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(statusFromDoc);
+    // await delay(200);
+    try {
+        const q = query(statusesCollection, orderBy('name'));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(statusFromDoc);
+    } catch (error) {
+        console.error("Error fetching statuses:", error);
+        return []; // Return empty array on error
+    }
 };
 
 export const addStatus = async (statusData: Omit<ProfileStatus, 'id'>): Promise<ProfileStatus> => {
-    await delay(300);
-    // Validate data
-     const validatedData = ProfileSchema.shape.statusId.safeParse(statusData.name); // Example validation, adapt as needed
-     if (!validatedData.success) {
-         throw new Error(`Invalid status data: ${validatedData.error.message}`);
-     }
+    // await delay(300);
+    try {
+        // Use the actual ProfileStatusSchema for validation
+        const validatedData = ProfileStatusSchema.omit({ id: true }).parse(statusData);
 
-    const docRef = await addDoc(statusesCollection, statusData);
-    const newDocSnap = await getDoc(docRef);
-    return statusFromDoc(newDocSnap as QueryDocumentSnapshot<Omit<ProfileStatus, 'id'>>);
+        const docRef = await addDoc(statusesCollection, validatedData);
+        const newDocSnap = await getDoc(docRef);
+        if (!newDocSnap.exists()) {
+             throw new Error("Failed to fetch newly added status.");
+        }
+        return statusFromDoc(newDocSnap as QueryDocumentSnapshot<Omit<ProfileStatus, 'id'>>);
+    } catch (error) {
+        console.error("Error adding status:", error);
+         if (error instanceof z.ZodError) {
+             console.error("Zod Validation Errors:", error.errors);
+         }
+        throw error;
+    }
 };
 
 export const updateStatus = async (id: string, statusData: Partial<Omit<ProfileStatus, 'id'>>): Promise<ProfileStatus | undefined> => {
-    await delay(300);
+    // await delay(300);
     const docRef = doc(db, 'statuses', id);
 
-     // Fetch current doc to ensure it exists
      const currentDoc = await getDoc(docRef);
      if (!currentDoc.exists()) {
          console.error(`Status with id ${id} not found for update.`);
          return undefined;
      }
 
-     // Validate partial data if necessary
-    await updateDoc(docRef, statusData);
-    const updatedDocSnap = await getDoc(docRef);
-    return statusFromDoc(updatedDocSnap as QueryDocumentSnapshot<Omit<ProfileStatus, 'id'>>);
+     try {
+        // Add partial validation if needed
+        // const validatedPartialData = ProfileStatusSchema.partial().omit({ id: true }).parse(statusData);
+        // await updateDoc(docRef, validatedPartialData);
+
+        await updateDoc(docRef, statusData); // Using original for now
+        const updatedDocSnap = await getDoc(docRef);
+        return statusFromDoc(updatedDocSnap as QueryDocumentSnapshot<Omit<ProfileStatus, 'id'>>);
+     } catch(error) {
+         console.error(`Error updating status ${id}:`, error);
+          if (error instanceof z.ZodError) {
+              console.error("Zod Validation Errors:", error.errors);
+         }
+         throw error;
+     }
 };
 
 export const deleteStatus = async (id: string): Promise<boolean> => {
-    await delay(400);
-    // Check if status is used by any profile before deleting
-    const profilesUsingStatusQuery = query(profilesCollection, where('statusId', '==', id), limit(1));
-    const usageSnapshot = await getDocs(profilesUsingStatusQuery);
-
-    if (!usageSnapshot.empty) {
-        console.warn(`Status ${id} is in use by profile ${usageSnapshot.docs[0].id} and cannot be deleted.`);
-        return false; // Indicate deletion failed because it's in use
-    }
-
-    const docRef = doc(db, 'statuses', id);
+    // await delay(400);
     try {
+        const profilesUsingStatusQuery = query(profilesCollection, where('statusId', '==', id), limit(1));
+        const usageSnapshot = await getDocs(profilesUsingStatusQuery);
+
+        if (!usageSnapshot.empty) {
+            console.warn(`Status ${id} is in use by profile ${usageSnapshot.docs[0].id} and cannot be deleted.`);
+            return false;
+        }
+
+        const docRef = doc(db, 'statuses', id);
         await deleteDoc(docRef);
+        console.log(`Status ${id} deleted successfully.`);
         return true;
     } catch (error) {
-        console.error("Error deleting status: ", error);
+        console.error(`Error deleting status ${id}: `, error);
         return false;
     }
 };
@@ -288,20 +368,25 @@ export const seedDefaultStatuses = async () => {
       { name: 'On Hold', description: 'Decision pending or temporarily paused.' },
     ];
 
-    const snapshot = await getDocs(query(statusesCollection, limit(1)));
-    if (snapshot.empty) {
-        console.log('Seeding default statuses...');
-        const batch = writeBatch(db);
-        defaultStatuses.forEach((statusData) => {
-            const docRef = doc(statusesCollection); // Firestore generates the ID
-            batch.set(docRef, statusData);
-        });
-        await batch.commit();
-        console.log('Default statuses seeded.');
-    } else {
-        // console.log('Statuses collection is not empty, skipping seed.');
+    try {
+        const snapshot = await getDocs(query(statusesCollection, limit(1)));
+        if (snapshot.empty) {
+            console.log('Seeding default statuses...');
+            const batch = writeBatch(db);
+            defaultStatuses.forEach((statusData) => {
+                // Validate each default status just in case
+                try {
+                    const validatedData = ProfileStatusSchema.omit({ id: true }).parse(statusData);
+                    const docRef = doc(statusesCollection);
+                    batch.set(docRef, validatedData);
+                } catch (validationError) {
+                    console.error(`Skipping invalid default status: ${statusData.name}`, validationError);
+                }
+            });
+            await batch.commit();
+            console.log('Default statuses seeded.');
+        }
+    } catch (error) {
+        console.error("Error checking or seeding statuses:", error);
     }
 };
-
-// Optional: Call seeding function on module load (or trigger it elsewhere)
-// seedDefaultStatuses(); // Be cautious about calling this directly on module load in Next.js
