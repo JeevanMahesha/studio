@@ -50,7 +50,8 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
         comments: profile?.comments ?? '',
       };
 
-   console.log("ProfileForm defaultValues:", defaultValues); // Log default values
+   // console.log("ProfileForm defaultValues:", defaultValues); // Log default values
+   // console.log("ProfileForm received statuses:", statuses); // Log statuses received
 
   const form = useForm({
     defaultValues: defaultValues,
@@ -79,7 +80,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          console.log("Native form onSubmit triggered"); // Log native form submit
+          // console.log("Native form onSubmit triggered"); // Log native form submit
           form.handleSubmit();
         }}
       >
@@ -98,7 +99,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => {
-                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      // console.log(`Field ${field.name} changed to:`, e.target.value);
                       field.handleChange(e.target.value);
                   }}
                   placeholder="Full Name"
@@ -125,7 +126,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                   value={field.state.value}
                   onBlur={field.handleBlur}
                     onChange={(e) => {
-                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      // console.log(`Field ${field.name} changed to:`, e.target.value);
                       field.handleChange(e.target.value);
                   }}
                   placeholder="Caste or Community"
@@ -156,7 +157,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                         const rawValue = e.target.value;
                         const parsedValue = parseInt(rawValue, 10);
                         const valueToSet = rawValue === '' ? undefined : (isNaN(parsedValue) ? field.state.value : parsedValue); // Keep current value if NaN, allow empty string to become undefined
-                        console.log(`Field ${field.name} changed. Raw: ${rawValue}, Parsed: ${parsedValue}, Setting:`, valueToSet);
+                        // console.log(`Field ${field.name} changed. Raw: ${rawValue}, Parsed: ${parsedValue}, Setting:`, valueToSet);
                         field.handleChange(valueToSet);
                     }}
                     type="number"
@@ -185,7 +186,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                     value={field.state.value}
                     onBlur={field.handleBlur}
                      onChange={(e) => {
-                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      // console.log(`Field ${field.name} changed to:`, e.target.value);
                       field.handleChange(e.target.value);
                   }}
                     placeholder="Birth Star (Nakshatra)"
@@ -214,7 +215,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                     value={field.state.value}
                     onBlur={field.handleBlur}
                      onChange={(e) => {
-                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      // console.log(`Field ${field.name} changed to:`, e.target.value);
                       field.handleChange(e.target.value);
                   }}
                     placeholder="City"
@@ -241,7 +242,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                     value={field.state.value}
                     onBlur={field.handleBlur}
                      onChange={(e) => {
-                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      // console.log(`Field ${field.name} changed to:`, e.target.value);
                       field.handleChange(e.target.value);
                   }}
                     placeholder="State"
@@ -273,7 +274,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                              const rawValue = e.target.value;
                              const parsedValue = parseFloat(rawValue);
                              const valueToSet = rawValue === '' ? undefined : (isNaN(parsedValue) ? field.state.value : parsedValue); // Keep current value if NaN, allow empty string to become undefined
-                             console.log(`Field ${field.name} changed. Raw: ${rawValue}, Parsed: ${parsedValue}, Setting:`, valueToSet);
+                             // console.log(`Field ${field.name} changed. Raw: ${rawValue}, Parsed: ${parsedValue}, Setting:`, valueToSet);
                              field.handleChange(valueToSet);
                          }}
                         type="number"
@@ -298,33 +299,39 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                     children={(field) => (
                         <div>
                         <Label htmlFor={field.name}>Status</Label>
-                        <Select
-                            value={field.state.value}
-                            onValueChange={(value) => {
-                                console.log(`Field ${field.name} changed to:`, value);
-                                field.handleChange(value);
+                         <Select
+                             value={field.state.value}
+                             // Bind onValueChange directly to field.handleChange
+                             onValueChange={(value) => {
+                                console.log(`Status changed to value: ${value}`);
+                                // Ensure we don't pass an empty string if that's somehow selected
+                                field.handleChange(value === '' ? undefined : value);
                             }}
-                            required
-                        >
+                            // `required` on Select itself is not standard HTML, rely on Zod validation
+                         >
                             <SelectTrigger id={field.name}>
+                            {/* Ensure placeholder is shown when value is empty/undefined */}
                             <SelectValue placeholder="Select status" />
                             </SelectTrigger>
                             <SelectContent>
-                             {/* Ensure statuses are loaded and available */}
-                             {!statuses || statuses.length === 0 ? (
-                                 <SelectItem value="loading" disabled>Loading statuses...</SelectItem>
-                             ) : (
+                             {/* Parent component should handle loading state, no need for 'loading' item here */}
+                             {statuses && statuses.length > 0 ? (
                                  statuses.map((status) => (
                                      <SelectItem key={status.id} value={status.id}>
                                      {status.name}
                                      </SelectItem>
                                  ))
+                             ) : (
+                                /* Optionally show a message if no statuses are available */
+                                 <SelectItem value="no-statuses" disabled>No statuses available</SelectItem>
                              )}
                             </SelectContent>
                         </Select>
                          {field.state.meta.touchedErrors ? (
                            <em className="text-xs text-destructive">{field.state.meta.touchedErrors.join(', ')}</em>
                          ) : null}
+                         {/* Debugging: Show current field value */}
+                         {/* <p className="text-xs mt-1">Current statusId value: {field.state.value || 'undefined'}</p> */}
                         </div>
                     )}
                     />
@@ -345,7 +352,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                   value={field.state.value}
                   onBlur={field.handleBlur}
                    onChange={(e) => {
-                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      // console.log(`Field ${field.name} changed to:`, e.target.value);
                       field.handleChange(e.target.value);
                   }}
                   placeholder="+91XXXXXXXXXX"
@@ -373,7 +380,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                   value={field.state.value}
                   onBlur={field.handleBlur}
                    onChange={(e) => {
-                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      // console.log(`Field ${field.name} changed to:`, e.target.value);
                       field.handleChange(e.target.value);
                   }}
                   placeholder="Matrimony Site Profile ID"
@@ -400,7 +407,7 @@ export function ProfileForm({ profile, statuses = [], onSubmit, isSubmitting }: 
                   value={field.state.value ?? ''} // Handle potentially undefined value
                   onBlur={field.handleBlur}
                   onChange={(e) => {
-                      console.log(`Field ${field.name} changed to:`, e.target.value);
+                      // console.log(`Field ${field.name} changed to:`, e.target.value);
                       field.handleChange(e.target.value);
                   }}
                   placeholder="Any additional notes or comments"

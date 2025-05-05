@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { ProfileSchema } from '@/types/profile'; // Import base schema
 import { Providers } from '@/app/providers';
 import { z } from 'zod';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for loading state
+import { AlertTriangle } from 'lucide-react'; // Import icon for error state
 
 // Define the schema specifically for the form submission (what the API expects)
 const ProfileCreateSchema = ProfileSchema.omit({ id: true, createdAt: true, updatedAt: true });
@@ -26,6 +28,13 @@ function AddProfilePageContent() {
         queryKey: ['statuses'],
         queryFn: fetchStatuses,
       });
+
+      // Log statuses when they are fetched or change
+    //   React.useEffect(() => {
+    //     if (!isLoadingStatuses && statuses) {
+    //       console.log("Statuses loaded in AddProfilePageContent:", statuses);
+    //     }
+    //   }, [statuses, isLoadingStatuses]);
 
 
     const mutation = useMutation({
@@ -60,30 +69,46 @@ function AddProfilePageContent() {
         await mutation.mutateAsync(data);
     };
 
-    if (isLoadingStatuses) {
-        return (
-            <MainLayout title="Add New Profile">
-                <div className="flex justify-center items-center h-40">Loading status options...</div>
-            </MainLayout>
-        );
-    }
+    let content;
 
-     if (statusesError) {
-        return (
-            <MainLayout title="Add New Profile">
-                <div className="text-destructive text-center">Error loading statuses: {statusesError.message}</div>
-            </MainLayout>
+    if (isLoadingStatuses) {
+       content = (
+           // Show skeleton while loading form data (similar to edit page)
+           <div className="w-full max-w-2xl mx-auto space-y-4">
+                <Skeleton className="h-10 w-1/3 mb-4" />
+                {[...Array(10)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                ))}
+                <div className="flex justify-end gap-2 pt-4">
+                     <Skeleton className="h-10 w-24" />
+                     <Skeleton className="h-10 w-24" />
+                </div>
+           </div>
+        );
+    } else if (statusesError) {
+        content = (
+            <div className="text-center text-destructive flex flex-col items-center gap-2">
+                <AlertTriangle className="w-8 h-8" />
+                <span>Error loading status options: {statusesError.message}</span>
+            </div>
+        );
+    } else {
+        content = (
+             <ProfileForm
+                onSubmit={handleSubmit}
+                isSubmitting={mutation.isPending}
+                statuses={statuses} // Pass the fetched statuses here
+            />
         );
     }
 
 
     return (
         <MainLayout title="Add New Profile">
-        <ProfileForm
-            onSubmit={handleSubmit}
-            isSubmitting={mutation.isPending}
-            statuses={statuses}
-        />
+            {content}
         </MainLayout>
     );
 }
