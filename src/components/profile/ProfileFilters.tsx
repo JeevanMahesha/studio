@@ -12,12 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import type { ProfileStatus } from '@/types/profile';
+import type { Profile, ProfileStatus } from '@/types/profile'; // Import Profile type
 import { FilterX } from 'lucide-react';
 
 interface ProfileFiltersProps {
   statuses: ProfileStatus[];
-  initialFilters: Record<string, any>;
+  initialFilters: Record<string, any> & { _profilesForOptions?: Profile[] }; // Specify Profile type
   onFilterChange: (filters: Record<string, any>) => void;
   onSearchChange: (searchTerm: string) => void;
 }
@@ -37,6 +37,12 @@ export function ProfileFilters({
      // Treat the placeholder value (if somehow selected, though unlikely) or empty string as clearing the filter
     const actualValue = value === '' ? undefined : value;
     const newFilters = { ...filters, [key]: actualValue };
+
+    // Remove the key if the value is undefined (cleared)
+    if (actualValue === undefined) {
+        delete newFilters[key];
+    }
+
     setFilters(newFilters);
     onFilterChange(newFilters);
   };
@@ -58,10 +64,10 @@ export function ProfileFilters({
   // Extract unique values for dropdowns (can be optimized for large datasets)
   // In a real app, these might come from the backend or be pre-calculated
   // Use the passed _profilesForOptions for deriving options
-  const uniqueCities = React.useMemo(() => Array.from(new Set(_profilesForOptions?.map((p: any) => p.city) ?? [])).filter(Boolean), [_profilesForOptions]);
-  const uniqueStates = React.useMemo(() => Array.from(new Set(_profilesForOptions?.map((p: any) => p.state) ?? [])).filter(Boolean), [_profilesForOptions]);
-  const uniqueStars = React.useMemo(() => Array.from(new Set(_profilesForOptions?.map((p: any) => p.star) ?? [])).filter(Boolean), [_profilesForOptions]);
-  const uniqueCasteRaises = React.useMemo(() => Array.from(new Set(_profilesForOptions?.map((p: any) => p.casteRaise) ?? [])).filter(Boolean), [_profilesForOptions]);
+  const uniqueCities = React.useMemo(() => Array.from(new Set(_profilesForOptions?.map((p: Profile) => p.city) ?? [])).filter(Boolean).sort(), [_profilesForOptions]);
+  const uniqueStates = React.useMemo(() => Array.from(new Set(_profilesForOptions?.map((p: Profile) => p.state) ?? [])).filter(Boolean).sort(), [_profilesForOptions]);
+  const uniqueStars = React.useMemo(() => Array.from(new Set(_profilesForOptions?.map((p: Profile) => p.star) ?? [])).filter(Boolean).sort(), [_profilesForOptions]);
+  const uniqueCasteRaises = React.useMemo(() => Array.from(new Set(_profilesForOptions?.map((p: Profile) => p.casteRaise) ?? [])).filter(Boolean).sort(), [_profilesForOptions]);
 
 
   return (
@@ -83,13 +89,14 @@ export function ProfileFilters({
           <Label htmlFor="filterStatus">Status</Label>
           <Select
             value={filters.statusId} // Bind directly, undefined will show placeholder
-            onValueChange={(value) => handleFilterChange('statusId', value)}
+            onValueChange={(value) => handleFilterChange('statusId', value === 'all-statuses' ? undefined : value)} // Handle clearing
           >
             <SelectTrigger id="filterStatus">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
-              {/* Removed: <SelectItem value="">All Statuses</SelectItem> */}
+               {/* Add an explicit "All" option if needed, but placeholder often suffices */}
+               {/* <SelectItem value="all-statuses">All Statuses</SelectItem> */}
               {statuses.map((status) => (
                 <SelectItem key={status.id} value={status.id}>
                   {status.name}
@@ -104,13 +111,13 @@ export function ProfileFilters({
           <Label htmlFor="filterCity">City</Label>
            <Select
              value={filters.city}
-             onValueChange={(value) => handleFilterChange('city', value)}
+             onValueChange={(value) => handleFilterChange('city', value === 'all-cities' ? undefined : value)}
            >
              <SelectTrigger id="filterCity">
                <SelectValue placeholder="All Cities" />
              </SelectTrigger>
              <SelectContent>
-                {/* Removed: <SelectItem value="">All Cities</SelectItem> */}
+                {/* <SelectItem value="all-cities">All Cities</SelectItem> */}
                 {uniqueCities.map((city) => (
                     <SelectItem key={city} value={city}>{city}</SelectItem>
                 ))}
@@ -123,13 +130,13 @@ export function ProfileFilters({
           <Label htmlFor="filterState">State</Label>
            <Select
              value={filters.state}
-             onValueChange={(value) => handleFilterChange('state', value)}
+             onValueChange={(value) => handleFilterChange('state', value === 'all-states' ? undefined : value)}
            >
              <SelectTrigger id="filterState">
                <SelectValue placeholder="All States" />
              </SelectTrigger>
              <SelectContent>
-                 {/* Removed: <SelectItem value="">All States</SelectItem> */}
+                {/* <SelectItem value="all-states">All States</SelectItem> */}
                 {uniqueStates.map((state) => (
                     <SelectItem key={state} value={state}>{state}</SelectItem>
                 ))}
@@ -142,13 +149,13 @@ export function ProfileFilters({
           <Label htmlFor="filterStar">Star</Label>
            <Select
              value={filters.star}
-             onValueChange={(value) => handleFilterChange('star', value)}
+             onValueChange={(value) => handleFilterChange('star', value === 'all-stars' ? undefined : value)}
            >
              <SelectTrigger id="filterStar">
                <SelectValue placeholder="All Stars" />
              </SelectTrigger>
              <SelectContent>
-                {/* Removed: <SelectItem value="">All Stars</SelectItem> */}
+                {/* <SelectItem value="all-stars">All Stars</SelectItem> */}
                 {uniqueStars.map((star) => (
                     <SelectItem key={star} value={star}>{star}</SelectItem>
                 ))}
@@ -161,13 +168,13 @@ export function ProfileFilters({
            <Label htmlFor="filterCasteRaise">Caste/Raise</Label>
             <Select
               value={filters.casteRaise}
-              onValueChange={(value) => handleFilterChange('casteRaise', value)}
+              onValueChange={(value) => handleFilterChange('casteRaise', value === 'all-castes' ? undefined : value)}
             >
               <SelectTrigger id="filterCasteRaise">
                 <SelectValue placeholder="All Castes/Raises" />
               </SelectTrigger>
               <SelectContent>
-                 {/* Removed: <SelectItem value="">All Castes/Raises</SelectItem> */}
+                 {/* <SelectItem value="all-castes">All Castes/Raises</SelectItem> */}
                  {uniqueCasteRaises.map((caste) => (
                      <SelectItem key={caste} value={caste}>{caste}</SelectItem>
                  ))}
