@@ -16,6 +16,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Add Firebase Storage pattern if you plan to store images there
+      // {
+      //   protocol: "https",
+      //   hostname: "firebasestorage.googleapis.com",
+      //   port: "",
+      //   pathname: "/v0/b/**", // Adjust pathname based on your bucket structure
+      // },
     ],
   },
 };

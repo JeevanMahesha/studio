@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchProfiles, fetchStatuses, deleteProfile } from '@/lib/apiClient';
+import { fetchProfiles, fetchStatuses, deleteProfile, seedDefaultStatuses } from '@/lib/apiClient'; // Import seed function
 import { MainLayout } from '@/components/layout/MainLayout';
 import { ProfileList } from '@/components/profile/ProfileList';
 import { ProfileFilters } from '@/components/profile/ProfileFilters';
@@ -21,19 +21,27 @@ function HomePageContent() {
   const [sortBy] = React.useState('name'); // Default sort by name
   const [currentPage, setCurrentPage] = React.useState(1);
 
+  // Seed default statuses on initial load if needed
+  React.useEffect(() => {
+      seedDefaultStatuses().catch(console.error);
+  }, []);
+
+
   // Fetch statuses (needed for displaying status names and filtering)
   const { data: statuses = [], isLoading: isLoadingStatuses } = useQuery({
     queryKey: ['statuses'],
     queryFn: fetchStatuses,
+    staleTime: Infinity, // Statuses rarely change, cache indefinitely
   });
 
-   // Fetch all profiles initially to populate filter options (can be optimized)
+   // Fetch all profiles *only* for populating filter options - Less efficient, consider alternatives for large datasets
    // Use a distinct query key to avoid conflicts
-   const { data: allProfilesData, isLoading: isLoadingAllProfiles } = useQuery({
+   const { data: allProfilesForFilters, isLoading: isLoadingAllProfiles } = useQuery({
         queryKey: ['allProfilesForFilterOptions'], // Distinct query key
-        queryFn: () => fetchProfiles({}, '', 'name', 1, 1000), // Fetch a large number
+        queryFn: () => fetchProfiles({}, '', 'name', 1, 1000), // Fetch a large number - POTENTIAL PERFORMANCE BOTTLENECK
         enabled: !isLoadingStatuses, // Only run when statuses are loaded
         staleTime: 5 * 60 * 1000, // Cache for 5 minutes, adjust as needed
+         select: (data) => data.data, // Select only the data array for filters
     });
 
   // Fetch profiles based on filters, search, sort, and pagination
@@ -98,15 +106,10 @@ function HomePageContent() {
   const totalProfiles = profilesData?.total ?? 0;
   const totalPages = Math.ceil(totalProfiles / PROFILES_PER_PAGE);
 
-  // Prepare initial filters *without* _profilesForOptions for the ProfileFilters component
-  // Pass _profilesForOptions separately if needed by the component internally
-  const initialFilterValues = React.useMemo(() => ({
-        ...filters, // Current active filters
-    }), [filters]);
-
+  // Pass the fetched profiles directly to the filters component for deriving options
   const profileOptionsForFilters = React.useMemo(() => ({
-      _profilesForOptions: allProfilesData?.data ?? []
-  }), [allProfilesData]);
+      _profilesForOptions: allProfilesForFilters ?? []
+  }), [allProfilesForFilters]);
 
 
   return (
@@ -130,8 +133,7 @@ function HomePageContent() {
         ) : (
           <ProfileFilters
             statuses={statuses}
-            initialFilters={profileOptionsForFilters} // Pass options data
-            // initialFilters={initialFilterValues} // Pass only active filter values
+            initialFilters={profileOptionsForFilters} // Pass options data derived from query
             onFilterChange={handleFilterChange}
             onSearchChange={handleSearchChange}
           />
@@ -145,7 +147,8 @@ function HomePageContent() {
              profiles={profilesData?.data ?? []}
              statuses={statuses}
              onDelete={handleDeleteProfile}
-             isLoading={isLoadingProfiles || deleteMutation.isPending} // Consider initial profile load as well
+             // Show loading state if initial profile list is loading OR if delete is pending
+             isLoading={isLoadingProfiles || deleteMutation.isPending}
           />
           {totalPages > 1 && ( // Only show pagination if there's more than one page
              <PaginationControls

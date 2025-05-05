@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Define Zod schema for Profile Status (can be expanded later)
 export const ProfileStatusSchema = z.object({
-  id: z.string(),
+  id: z.string(), // ID will be managed by Firestore
   name: z.string().min(1, 'Status name is required'),
   description: z.string().optional(),
 });
@@ -10,8 +10,9 @@ export const ProfileStatusSchema = z.object({
 export type ProfileStatus = z.infer<typeof ProfileStatusSchema>;
 
 // Define Zod schema for Profile
+// Timestamps are handled separately when converting to/from Firestore
 export const ProfileSchema = z.object({
-  id: z.string().optional(), // Optional for creation, required for update/display
+  id: z.string().optional(), // Optional for creation, comes from Firestore doc ID
   name: z.string().min(1, 'Name is required'),
   casteRaise: z.string().min(1, 'Caste/Raise is required'), // Changed field name for consistency
   age: z.number().int().positive('Age must be a positive number').min(18, 'Age must be at least 18'),
@@ -29,18 +30,14 @@ export const ProfileSchema = z.object({
   statusId: z.string().min(1, 'Status is required'), // Link to ProfileStatus ID
   matrimonyId: z.string().min(1, 'Matrimony ID is required'),
   comments: z.string().optional(),
-  createdAt: z.date().optional(), // Add timestamps
+  // Dates are handled during Firestore conversion
+  createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
 });
 
+// Type for client-side use (with Date objects)
 export type Profile = z.infer<typeof ProfileSchema>;
 
-// Example default status list (in a real app, this would come from the backend)
-export const defaultStatuses: ProfileStatus[] = [
-  { id: '1', name: 'New' },
-  { id: '2', name: 'Contacted' },
-  { id: '3', name: 'Meeting Scheduled' },
-  { id: '4', name: 'Rejected' },
-  { id: '5', name: 'Accepted' },
-  { id: '6', name: 'On Hold' },
-];
+
+// Default statuses are now seeded directly into Firestore via apiClient.ts
+// export const defaultStatuses: ProfileStatus[] = [...]; // Remove this export
