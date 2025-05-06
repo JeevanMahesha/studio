@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 // Define Zod schema for Profile Status (can be expanded later)
 export const ProfileStatusSchema = z.object({
-  id: z.string(), // ID will be managed by Firestore
+  id: z.string(), // ID will be managed by Firestore (string)
   name: z.string().min(1, 'Status name is required'),
-  description: z.string().optional(),
+  description: z.string().optional(), // Added description to match seeding
 });
 
 export type ProfileStatus = z.infer<typeof ProfileStatusSchema>;
@@ -27,7 +27,7 @@ export const ProfileSchema = z.object({
     .string()
     .min(10, 'Mobile number must be at least 10 digits')
     .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid mobile number format'), // Basic E.164 format check
-  statusId: z.string().min(1, 'Status is required'), // Link to ProfileStatus ID
+  statusId: z.string().min(1, 'Status is required'), // Link to ProfileStatus ID (string)
   matrimonyId: z.string().min(1, 'Matrimony ID is required'),
   comments: z.string().optional(),
   // Dates are handled during Firestore conversion
@@ -40,4 +40,11 @@ export type Profile = z.infer<typeof ProfileSchema>;
 
 
 // Default statuses are now seeded directly into Firestore via apiClient.ts
-// export const defaultStatuses: ProfileStatus[] = [...]; // Remove this export
+// export const defaultStatuses: ProfileStatus[] = [
+//   { id: "1", name: 'New' }, // IDs are strings
+//   { id: "2", name: 'Contacted' },
+//   { id: "3", name: 'Meeting Scheduled' },
+//   { id: "4", name: 'Rejected' },
+//   { id: "5", name: 'Accepted' },
+//   { id: "6", name: 'On Hold' },
+// ];

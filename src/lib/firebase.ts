@@ -32,3 +32,4 @@ export { db, profilesCollection, statusesCollection };
 if (typeof window === 'undefined') { // Only log on server-side
     console.log(`Firebase initialized for project: ${firebaseConfig.projectId}`);
 }
+
