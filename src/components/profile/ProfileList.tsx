@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Link from 'next/link';
+import * as React from "react";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -9,11 +9,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Eye, Edit, Trash2 } from 'lucide-react';
-import { Profile, ProfileStatus } from '@/types/profile';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Eye, Edit, Trash2 } from "lucide-react";
+import { Profile, ProfileStatus } from "@/types/profile";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +26,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-
 interface ProfileListProps {
   profiles: Profile[];
   statuses: ProfileStatus[];
@@ -35,26 +34,41 @@ interface ProfileListProps {
 }
 
 // Helper to get status name from ID
-const getStatusName = (statusId: string, statuses: ProfileStatus[]): string => {
-  return statuses.find(s => s.id === statusId)?.name ?? 'Unknown';
+const getStatusName = (
+  profileStatusId: string,
+  statuses: ProfileStatus[]
+): string => {
+  return statuses.find((s) => s.id === profileStatusId)?.name ?? "Unknown";
 };
 
-export function ProfileList({ profiles, statuses, onDelete, isLoading }: ProfileListProps) {
-
+export function ProfileList({
+  profiles,
+  statuses,
+  onDelete,
+  isLoading,
+}: ProfileListProps) {
   const [isDeleting, setIsDeleting] = React.useState<string | null>(null); // Track which profile is being deleted
 
   const handleDeleteConfirm = async (id: string) => {
-      setIsDeleting(id);
-      await onDelete(id);
-      setIsDeleting(null); // Reset after deletion attempt
+    setIsDeleting(id);
+    await onDelete(id);
+    setIsDeleting(null); // Reset after deletion attempt
   };
 
   if (isLoading) {
-      return <div className="flex justify-center items-center h-40">Loading profiles...</div>; // Basic loading indicator
+    return (
+      <div className="flex justify-center items-center h-40">
+        Loading profiles...
+      </div>
+    ); // Basic loading indicator
   }
 
   if (!profiles || profiles.length === 0) {
-    return <div className="text-center text-muted-foreground mt-10">No profiles found. Add one to get started!</div>;
+    return (
+      <div className="text-center text-muted-foreground mt-10">
+        No profiles found. Add one to get started!
+      </div>
+    );
   }
 
   return (
@@ -64,7 +78,7 @@ export function ProfileList({ profiles, statuses, onDelete, isLoading }: Profile
           <TableHead>Name</TableHead>
           <TableHead className="hidden md:table-cell">Caste/Raise</TableHead>
           <TableHead className="hidden sm:table-cell">City</TableHead>
-          <TableHead>Status</TableHead>
+          <TableHead>Profile Status</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -72,10 +86,16 @@ export function ProfileList({ profiles, statuses, onDelete, isLoading }: Profile
         {profiles.map((profile) => (
           <TableRow key={profile.id}>
             <TableCell className="font-medium">{profile.name}</TableCell>
-            <TableCell className="hidden md:table-cell">{profile.casteRaise}</TableCell>
-            <TableCell className="hidden sm:table-cell">{profile.city}, {profile.state}</TableCell>
+            <TableCell className="hidden md:table-cell">
+              {profile.casteRaise}
+            </TableCell>
+            <TableCell className="hidden sm:table-cell">
+              {profile.city}, {profile.state}
+            </TableCell>
             <TableCell>
-              <Badge variant="secondary">{getStatusName(profile.statusId, statuses)}</Badge>
+              <Badge variant="secondary">
+                {getStatusName(profile.profileStatusId, statuses)}
+              </Badge>
             </TableCell>
             <TableCell className="text-right space-x-1">
               <Button variant="ghost" size="icon" asChild>
@@ -90,36 +110,45 @@ export function ProfileList({ profiles, statuses, onDelete, isLoading }: Profile
                   <span className="sr-only">Edit</span>
                 </Link>
               </Button>
-               <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" disabled={isDeleting === profile.id}>
-                          {isDeleting === profile.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                          )}
-                          <span className="sr-only">Delete</span>
-                      </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                      <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the profile
-                              for <span className="font-semibold">{profile.name}</span>.
-                          </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                          <AlertDialogCancel disabled={isDeleting === profile.id}>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                              onClick={() => handleDeleteConfirm(profile.id!)}
-                              disabled={isDeleting === profile.id}
-                              className={buttonVariants({ variant: "destructive" })}
-                            >
-                              {isDeleting === profile.id ? 'Deleting...' : 'Delete'}
-                          </AlertDialogAction>
-                      </AlertDialogFooter>
-                  </AlertDialogContent>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={isDeleting === profile.id}
+                  >
+                    {isDeleting === profile.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    )}
+                    <span className="sr-only">Delete</span>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      the profile for{" "}
+                      <span className="font-semibold">{profile.name}</span>.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isDeleting === profile.id}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleDeleteConfirm(profile.id!)}
+                      disabled={isDeleting === profile.id}
+                      className={buttonVariants({ variant: "destructive" })}
+                    >
+                      {isDeleting === profile.id ? "Deleting..." : "Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
               </AlertDialog>
             </TableCell>
           </TableRow>
@@ -130,5 +159,5 @@ export function ProfileList({ profiles, statuses, onDelete, isLoading }: Profile
 }
 
 // Re-export buttonVariants if needed within this file
-import { buttonVariants } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
+import { buttonVariants } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";

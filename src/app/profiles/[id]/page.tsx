@@ -13,7 +13,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -147,8 +146,10 @@ function ProfileDetailsPageContent() {
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Status</span>
-            {/* <Badge variant="secondary" className="text-sm">{getStatusName(profile.statusId)}</Badge> */}
+            <span className="text-sm text-muted-foreground">
+              Profile Status
+            </span>
+            {/* <Badge variant="secondary" className="text-sm">{getStatusName(profile.profileStatusId)}</Badge> */}
           </div>
           <Separator />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">

@@ -1,16 +1,15 @@
 "use client"; // Mark this as a Client Component
 
-import * as React from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchProfiles, deleteProfile } from "@/lib/apiClient"; // Import seed function
-import { MainLayout } from "@/components/layout/MainLayout";
-import { ProfileList } from "@/components/profile/ProfileList";
-import { ProfileFilters } from "@/components/profile/ProfileFilters";
 import { PaginationControls } from "@/components/common/PaginationControls";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { ProfileFilters } from "@/components/profile/ProfileFilters";
+import { ProfileList } from "@/components/profile/ProfileList";
 import { useToast } from "@/hooks/use-toast";
-import { Providers } from "./providers"; // Import the Providers component
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
+import { deleteProfile, fetchProfiles } from "@/lib/apiClient"; // Import seed function
 import { defaultStatuses } from "@/types/profile";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as React from "react";
+import { Providers } from "./providers"; // Import the Providers component
 
 const PROFILES_PER_PAGE = 10;
 

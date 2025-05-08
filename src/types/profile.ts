@@ -11,8 +11,12 @@ export type ProfileStatus = z.infer<typeof ProfileStatusSchema>;
 // Define Zod schema for Profile
 // Timestamps are handled separately when converting to/from Firestore
 export const ProfileSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  profileStatusId: z.string().min(1, "Profile Status is required"),
   casteRaise: z.string().min(1, "Raise is required"),
   age: z.number().min(18, "Age must be at least 18"),
   star: z.string().min(1, "Star is required"),
@@ -20,11 +24,10 @@ export const ProfileSchema = z.object({
   state: z.string().min(1, "State is required"),
   starMatchScore: z.number().min(0).max(10),
   mobileNumber: z.string().min(10, "Mobile number must be at least 10 digits"),
-  statusId: z.string().min(1, "Status is required"),
   matrimonyId: z.string().min(1, "Matrimony ID is required"),
   comments: z.array(z.string()).default([]),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
 });
 
 // Type for client-side use (with Date objects)
