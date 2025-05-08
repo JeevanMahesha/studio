@@ -27,6 +27,11 @@ import {
 import { ProfileSchema, Profile, ProfileStatus } from "@/types/profile";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import {
+  matchingNakshatraList,
+  StateList,
+  DistrictList,
+} from "@/lib/dropDownConstValues";
 
 // Define the schema specifically for the form (excluding server-generated fields like id, createdAt, updatedAt)
 const ProfileFormSchema = ProfileSchema.omit({
@@ -50,7 +55,9 @@ export function ProfileForm({
 }: ProfileFormProps) {
   const router = useRouter();
   const { toast } = useToast();
-
+  const star = matchingNakshatraList;
+  const state = StateList;
+  const district = DistrictList;
   const defaultValues = {
     name: profile?.name ?? "",
     casteRaise: profile?.casteRaise ?? "",
@@ -123,16 +130,15 @@ export function ProfileForm({
               </div>
             )}
           </form.Field>
-
           <form.Field
-            name="casteRaise"
+            name="mobileNumber"
             validators={{
-              onChange: ProfileFormSchema.shape.casteRaise,
+              onChange: ProfileFormSchema.shape.mobileNumber,
             }}
           >
             {(field) => (
               <div>
-                <Label htmlFor={field.name}>Caste/Raise</Label>
+                <Label htmlFor={field.name}>Mobile Number</Label>
                 <Input
                   id={field.name}
                   name={field.name}
@@ -141,7 +147,8 @@ export function ProfileForm({
                   onChange={(e) => {
                     field.handleChange(e.target.value);
                   }}
-                  placeholder="Caste or Community"
+                  placeholder="+91XXXXXXXXXX"
+                  type="tel"
                   required
                 />
                 {field.state.meta.touchedErrors ? (
@@ -152,6 +159,76 @@ export function ProfileForm({
               </div>
             )}
           </form.Field>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form.Field
+              name="casteRaise"
+              validators={{
+                onChange: ProfileFormSchema.shape.casteRaise,
+              }}
+            >
+              {(field) => (
+                <div>
+                  <Label htmlFor={field.name}>Raise</Label>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value);
+                    }}
+                    placeholder="Raise"
+                    required
+                  />
+                  {field.state.meta.touchedErrors ? (
+                    <em className="text-xs text-destructive">
+                      {field.state.meta.touchedErrors.join(", ")}
+                    </em>
+                  ) : null}
+                </div>
+              )}
+            </form.Field>
+
+            <form.Field
+              name="star"
+              validators={{
+                onChange: ProfileFormSchema.shape.star,
+              }}
+            >
+              {(field) => (
+                <div>
+                  <Label htmlFor={field.name}>Star</Label>
+                  <Select
+                    name={field.name}
+                    value={field.state.value}
+                    required
+                    onValueChange={(value) => {
+                      field.handleChange(value);
+                    }}
+                  >
+                    <SelectTrigger id={field.name}>
+                      <SelectValue placeholder="Birth Star" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {star.map((star) => (
+                        <SelectItem key={star.english} value={star.english}>
+                          {star.english}{" "}
+                          <span className="text-xs text-muted-foreground">
+                            ({star.score})
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {field.state.meta.touchedErrors ? (
+                    <em className="text-xs text-destructive">
+                      {field.state.meta.touchedErrors.join(", ")}
+                    </em>
+                  ) : null}
+                </div>
+              )}
+            </form.Field>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <form.Field
@@ -194,97 +271,6 @@ export function ProfileForm({
             </form.Field>
 
             <form.Field
-              name="star"
-              validators={{
-                onChange: ProfileFormSchema.shape.star,
-              }}
-            >
-              {(field) => (
-                <div>
-                  <Label htmlFor={field.name}>Star</Label>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => {
-                      field.handleChange(e.target.value);
-                    }}
-                    placeholder="Birth Star (Nakshatra)"
-                    required
-                  />
-                  {field.state.meta.touchedErrors ? (
-                    <em className="text-xs text-destructive">
-                      {field.state.meta.touchedErrors.join(", ")}
-                    </em>
-                  ) : null}
-                </div>
-              )}
-            </form.Field>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <form.Field
-              name="city"
-              validators={{
-                onChange: ProfileFormSchema.shape.city,
-              }}
-            >
-              {(field) => (
-                <div>
-                  <Label htmlFor={field.name}>City</Label>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => {
-                      field.handleChange(e.target.value);
-                    }}
-                    placeholder="City"
-                    required
-                  />
-                  {field.state.meta.touchedErrors ? (
-                    <em className="text-xs text-destructive">
-                      {field.state.meta.touchedErrors.join(", ")}
-                    </em>
-                  ) : null}
-                </div>
-              )}
-            </form.Field>
-
-            <form.Field
-              name="state"
-              validators={{
-                onChange: ProfileFormSchema.shape.state,
-              }}
-            >
-              {(field) => (
-                <div>
-                  <Label htmlFor={field.name}>State</Label>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => {
-                      field.handleChange(e.target.value);
-                    }}
-                    placeholder="State"
-                    required
-                  />
-                  {field.state.meta.touchedErrors ? (
-                    <em className="text-xs text-destructive">
-                      {field.state.meta.touchedErrors.join(", ")}
-                    </em>
-                  ) : null}
-                </div>
-              )}
-            </form.Field>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <form.Field
               name="starMatchScore"
               validators={{
                 onChange: ProfileFormSchema.shape.starMatchScore,
@@ -326,7 +312,68 @@ export function ProfileForm({
                 </div>
               )}
             </form.Field>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form.Field
+              name="state"
+              validators={{
+                onChange: ProfileFormSchema.shape.state,
+              }}
+            >
+              {(field) => (
+                <div>
+                  <Label htmlFor={field.name}>State</Label>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value);
+                    }}
+                    placeholder="State"
+                    required
+                  />
+                  {field.state.meta.touchedErrors ? (
+                    <em className="text-xs text-destructive">
+                      {field.state.meta.touchedErrors.join(", ")}
+                    </em>
+                  ) : null}
+                </div>
+              )}
+            </form.Field>
+            <form.Field
+              name="city"
+              validators={{
+                onChange: ProfileFormSchema.shape.city,
+              }}
+            >
+              {(field) => (
+                <div>
+                  <Label htmlFor={field.name}>City</Label>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value);
+                    }}
+                    placeholder="City"
+                    required
+                  />
+                  {field.state.meta.touchedErrors ? (
+                    <em className="text-xs text-destructive">
+                      {field.state.meta.touchedErrors.join(", ")}
+                    </em>
+                  ) : null}
+                </div>
+              )}
+            </form.Field>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <form.Field
               name="statusId"
               validators={{
@@ -370,66 +417,36 @@ export function ProfileForm({
                 </div>
               )}
             </form.Field>
+
+            <form.Field
+              name="matrimonyId"
+              validators={{
+                onChange: ProfileFormSchema.shape.matrimonyId,
+              }}
+            >
+              {(field) => (
+                <div>
+                  <Label htmlFor={field.name}>Matrimony ID</Label>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value);
+                    }}
+                    placeholder="Matrimony Site Profile ID"
+                    required
+                  />
+                  {field.state.meta.touchedErrors ? (
+                    <em className="text-xs text-destructive">
+                      {field.state.meta.touchedErrors.join(", ")}
+                    </em>
+                  ) : null}
+                </div>
+              )}
+            </form.Field>
           </div>
-
-          <form.Field
-            name="mobileNumber"
-            validators={{
-              onChange: ProfileFormSchema.shape.mobileNumber,
-            }}
-          >
-            {(field) => (
-              <div>
-                <Label htmlFor={field.name}>Mobile Number</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => {
-                    field.handleChange(e.target.value);
-                  }}
-                  placeholder="+91XXXXXXXXXX"
-                  type="tel"
-                  required
-                />
-                {field.state.meta.touchedErrors ? (
-                  <em className="text-xs text-destructive">
-                    {field.state.meta.touchedErrors.join(", ")}
-                  </em>
-                ) : null}
-              </div>
-            )}
-          </form.Field>
-
-          <form.Field
-            name="matrimonyId"
-            validators={{
-              onChange: ProfileFormSchema.shape.matrimonyId,
-            }}
-          >
-            {(field) => (
-              <div>
-                <Label htmlFor={field.name}>Matrimony ID</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => {
-                    field.handleChange(e.target.value);
-                  }}
-                  placeholder="Matrimony Site Profile ID"
-                  required
-                />
-                {field.state.meta.touchedErrors ? (
-                  <em className="text-xs text-destructive">
-                    {field.state.meta.touchedErrors.join(", ")}
-                  </em>
-                ) : null}
-              </div>
-            )}
-          </form.Field>
 
           <form.Field
             name="comments"
