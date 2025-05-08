@@ -1,16 +1,13 @@
 "use client";
-import * as React from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { addProfile } from "@/lib/apiClient";
-import { ProfileForm } from "@/components/profile/ProfileForm";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { useToast } from "@/hooks/use-toast";
-import { defaultStatuses, ProfileSchema } from "@/types/profile"; // Import base schema
 import { Providers } from "@/app/providers";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { ProfileForm } from "@/components/profile/ProfileForm";
+import { useToast } from "@/hooks/use-toast";
+import { addProfile } from "@/lib/apiClient";
+import { defaultStatuses, ProfileSchema } from "@/types/profile"; // Import base schema
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton for loading state
-import { AlertTriangle } from "lucide-react"; // Import icon for error state
 
 // Define the schema specifically for the form submission (what the API expects)
 const ProfileCreateSchema = ProfileSchema.omit({

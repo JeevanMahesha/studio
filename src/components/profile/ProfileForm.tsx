@@ -36,10 +36,10 @@ const ProfileFormSchema = ProfileSchema.omit({
 });
 
 interface ProfileFormProps {
-  profile?: Profile; // Optional profile data for editing
-  statuses: ProfileStatus[];
-  onSubmit: (data: z.infer<typeof ProfileFormSchema>) => Promise<void>;
-  isSubmitting: boolean;
+  readonly profile?: Profile;
+  readonly statuses: ProfileStatus[];
+  readonly onSubmit: (data: z.infer<typeof ProfileFormSchema>) => Promise<void>;
+  readonly isSubmitting: boolean;
 }
 
 export function ProfileForm({
@@ -64,9 +64,6 @@ export function ProfileForm({
     matrimonyId: profile?.matrimonyId ?? "",
     comments: profile?.comments ?? "",
   };
-
-  // console.log("ProfileForm defaultValues:", defaultValues); // Log default values
-  // console.log("ProfileForm received statuses:", statuses); // Log statuses received
 
   const form = useForm({
     defaultValues: defaultValues,
@@ -94,7 +91,6 @@ export function ProfileForm({
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          // console.log("Native form onSubmit triggered"); // Log native form submit
           form.handleSubmit();
         }}
       >
@@ -104,7 +100,8 @@ export function ProfileForm({
             validators={{
               onChange: ProfileFormSchema.shape.name,
             }}
-            children={(field) => (
+          >
+            {(field) => (
               <div>
                 <Label htmlFor={field.name}>Name</Label>
                 <Input
@@ -113,7 +110,6 @@ export function ProfileForm({
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => {
-                    // console.log(`Field ${field.name} changed to:`, e.target.value);
                     field.handleChange(e.target.value);
                   }}
                   placeholder="Full Name"
@@ -126,14 +122,15 @@ export function ProfileForm({
                 ) : null}
               </div>
             )}
-          />
+          </form.Field>
 
           <form.Field
             name="casteRaise"
             validators={{
               onChange: ProfileFormSchema.shape.casteRaise,
             }}
-            children={(field) => (
+          >
+            {(field) => (
               <div>
                 <Label htmlFor={field.name}>Caste/Raise</Label>
                 <Input
@@ -142,7 +139,6 @@ export function ProfileForm({
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => {
-                    // console.log(`Field ${field.name} changed to:`, e.target.value);
                     field.handleChange(e.target.value);
                   }}
                   placeholder="Caste or Community"
@@ -155,7 +151,7 @@ export function ProfileForm({
                 ) : null}
               </div>
             )}
-          />
+          </form.Field>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <form.Field
@@ -163,7 +159,8 @@ export function ProfileForm({
               validators={{
                 onChange: ProfileFormSchema.shape.age,
               }}
-              children={(field) => (
+            >
+              {(field) => (
                 <div>
                   <Label htmlFor={field.name}>Age</Label>
                   <Input
@@ -174,13 +171,12 @@ export function ProfileForm({
                     onChange={(e) => {
                       const rawValue = e.target.value;
                       const parsedValue = parseInt(rawValue, 10);
-                      const valueToSet =
-                        rawValue === ""
-                          ? 0
-                          : isNaN(parsedValue)
+                      let valueToSet = 0;
+                      if (rawValue !== "") {
+                        valueToSet = isNaN(parsedValue)
                           ? field.state.value
-                          : parsedValue; // Keep current value if NaN, allow empty string to become undefined
-                      // console.log(`Field ${field.name} changed. Raw: ${rawValue}, Parsed: ${parsedValue}, Setting:`, valueToSet);
+                          : parsedValue;
+                      }
                       field.handleChange(valueToSet);
                     }}
                     type="number"
@@ -195,14 +191,15 @@ export function ProfileForm({
                   ) : null}
                 </div>
               )}
-            />
+            </form.Field>
 
             <form.Field
               name="star"
               validators={{
                 onChange: ProfileFormSchema.shape.star,
               }}
-              children={(field) => (
+            >
+              {(field) => (
                 <div>
                   <Label htmlFor={field.name}>Star</Label>
                   <Input
@@ -211,7 +208,6 @@ export function ProfileForm({
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => {
-                      // console.log(`Field ${field.name} changed to:`, e.target.value);
                       field.handleChange(e.target.value);
                     }}
                     placeholder="Birth Star (Nakshatra)"
@@ -224,7 +220,7 @@ export function ProfileForm({
                   ) : null}
                 </div>
               )}
-            />
+            </form.Field>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -233,7 +229,8 @@ export function ProfileForm({
               validators={{
                 onChange: ProfileFormSchema.shape.city,
               }}
-              children={(field) => (
+            >
+              {(field) => (
                 <div>
                   <Label htmlFor={field.name}>City</Label>
                   <Input
@@ -242,7 +239,6 @@ export function ProfileForm({
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => {
-                      // console.log(`Field ${field.name} changed to:`, e.target.value);
                       field.handleChange(e.target.value);
                     }}
                     placeholder="City"
@@ -255,14 +251,15 @@ export function ProfileForm({
                   ) : null}
                 </div>
               )}
-            />
+            </form.Field>
 
             <form.Field
               name="state"
               validators={{
                 onChange: ProfileFormSchema.shape.state,
               }}
-              children={(field) => (
+            >
+              {(field) => (
                 <div>
                   <Label htmlFor={field.name}>State</Label>
                   <Input
@@ -271,7 +268,6 @@ export function ProfileForm({
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => {
-                      // console.log(`Field ${field.name} changed to:`, e.target.value);
                       field.handleChange(e.target.value);
                     }}
                     placeholder="State"
@@ -284,7 +280,7 @@ export function ProfileForm({
                   ) : null}
                 </div>
               )}
-            />
+            </form.Field>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -293,7 +289,8 @@ export function ProfileForm({
               validators={{
                 onChange: ProfileFormSchema.shape.starMatchScore,
               }}
-              children={(field) => (
+            >
+              {(field) => (
                 <div>
                   <Label htmlFor={field.name}>Star Match Score (0-10)</Label>
                   <Input
@@ -304,13 +301,14 @@ export function ProfileForm({
                     onChange={(e) => {
                       const rawValue = e.target.value;
                       const parsedValue = parseFloat(rawValue);
-                      const valueToSet =
-                        rawValue === ""
-                          ? 0
-                          : isNaN(parsedValue)
+                      let valueToSet = 0;
+
+                      if (rawValue !== "") {
+                        valueToSet = isNaN(parsedValue)
                           ? field.state.value
-                          : parsedValue; // Keep current value if NaN, allow empty string to become undefined
-                      // console.log(`Field ${field.name} changed. Raw: ${rawValue}, Parsed: ${parsedValue}, Setting:`, valueToSet);
+                          : parsedValue;
+                      }
+
                       field.handleChange(valueToSet);
                     }}
                     type="number"
@@ -327,14 +325,15 @@ export function ProfileForm({
                   ) : null}
                 </div>
               )}
-            />
+            </form.Field>
 
             <form.Field
               name="statusId"
               validators={{
                 onChange: ProfileFormSchema.shape.statusId,
               }}
-              children={(field) => (
+            >
+              {(field) => (
                 <div>
                   <Label htmlFor={field.name}>Status</Label>
                   <Select
@@ -370,7 +369,7 @@ export function ProfileForm({
                   {/* <p className="text-xs mt-1">Current statusId value: {field.state.value || 'undefined'}</p> */}
                 </div>
               )}
-            />
+            </form.Field>
           </div>
 
           <form.Field
@@ -378,7 +377,8 @@ export function ProfileForm({
             validators={{
               onChange: ProfileFormSchema.shape.mobileNumber,
             }}
-            children={(field) => (
+          >
+            {(field) => (
               <div>
                 <Label htmlFor={field.name}>Mobile Number</Label>
                 <Input
@@ -387,7 +387,6 @@ export function ProfileForm({
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => {
-                    // console.log(`Field ${field.name} changed to:`, e.target.value);
                     field.handleChange(e.target.value);
                   }}
                   placeholder="+91XXXXXXXXXX"
@@ -401,14 +400,15 @@ export function ProfileForm({
                 ) : null}
               </div>
             )}
-          />
+          </form.Field>
 
           <form.Field
             name="matrimonyId"
             validators={{
               onChange: ProfileFormSchema.shape.matrimonyId,
             }}
-            children={(field) => (
+          >
+            {(field) => (
               <div>
                 <Label htmlFor={field.name}>Matrimony ID</Label>
                 <Input
@@ -417,7 +417,6 @@ export function ProfileForm({
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => {
-                    // console.log(`Field ${field.name} changed to:`, e.target.value);
                     field.handleChange(e.target.value);
                   }}
                   placeholder="Matrimony Site Profile ID"
@@ -430,14 +429,15 @@ export function ProfileForm({
                 ) : null}
               </div>
             )}
-          />
+          </form.Field>
 
           <form.Field
             name="comments"
             validators={{
               onChange: ProfileFormSchema.shape.comments,
             }}
-            children={(field) => (
+          >
+            {(field) => (
               <div>
                 <Label htmlFor={field.name}>Comments</Label>
                 <Textarea
@@ -446,7 +446,6 @@ export function ProfileForm({
                   value={field.state.value ?? ""} // Handle potentially undefined value
                   onBlur={field.handleBlur}
                   onChange={(e) => {
-                    // console.log(`Field ${field.name} changed to:`, e.target.value);
                     field.handleChange(e.target.value);
                   }}
                   placeholder="Any additional notes or comments"
@@ -458,7 +457,7 @@ export function ProfileForm({
                 ) : null}
               </div>
             )}
-          />
+          </form.Field>
         </CardContent>
         <CardFooter className="flex justify-end gap-2">
           <Button
@@ -471,10 +470,9 @@ export function ProfileForm({
           </Button>
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting]}
-            children={([canSubmit, formIsSubmitting]) => {
-              // Log form state for debugging submission button
-              // console.log("Form State for Submit Button:", { canSubmit, formIsSubmitting, isSubmittingProp: isSubmitting });
-              const actualIsSubmitting = formIsSubmitting || isSubmitting; // Combine TanStack Form state and prop
+          >
+            {([canSubmit, formIsSubmitting]) => {
+              const actualIsSubmitting = formIsSubmitting || isSubmitting;
               return (
                 <Button
                   type="submit"
@@ -487,7 +485,7 @@ export function ProfileForm({
                 </Button>
               );
             }}
-          />
+          </form.Subscribe>
         </CardFooter>
       </form>
     </Card>
