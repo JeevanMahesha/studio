@@ -1,15 +1,21 @@
 "use client";
 
-import * as React from "react";
 import { useForm } from "@tanstack/react-form";
 import { zodValidator } from "@tanstack/zod-form-adapter";
 import { useRouter } from "next/navigation";
+import * as React from "react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -17,21 +23,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
-import { ProfileSchema, Profile, ProfileStatus } from "@/types/profile";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
 import {
+  DistrictList,
   matchingNakshatraList,
   StateList,
-  DistrictList,
 } from "@/lib/dropDownConstValues";
+import { Profile, ProfileSchema, ProfileStatus } from "@/types/profile";
+import { Loader2 } from "lucide-react";
 
 // Define the schema specifically for the form (excluding server-generated fields like id, createdAt, updatedAt)
 const ProfileFormSchema = ProfileSchema.omit({
@@ -56,8 +56,9 @@ export function ProfileForm({
   const router = useRouter();
   const { toast } = useToast();
   const star = matchingNakshatraList;
-  const state = StateList;
-  const district = DistrictList;
+  const [selectedState, setSelectedState] = React.useState<string | undefined>(
+    profile?.state
+  );
   const defaultValues = {
     name: profile?.name ?? "",
     casteRaise: profile?.casteRaise ?? "",
@@ -330,13 +331,16 @@ export function ProfileForm({
                     required
                     onValueChange={(value) => {
                       field.handleChange(value);
+                      setSelectedState(value);
+                      // Clear city when state changes
+                      form.setFieldValue("city", "");
                     }}
                   >
                     <SelectTrigger id={field.name}>
                       <SelectValue placeholder="Select state" />
                     </SelectTrigger>
                     <SelectContent>
-                      {state.map((state) => (
+                      {StateList.map((state) => (
                         <SelectItem key={state} value={state}>
                           {state}
                         </SelectItem>
@@ -360,17 +364,33 @@ export function ProfileForm({
               {(field) => (
                 <div>
                   <Label htmlFor={field.name}>City</Label>
-                  <Input
-                    id={field.name}
+                  <Select
                     name={field.name}
                     value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => {
-                      field.handleChange(e.target.value);
-                    }}
-                    placeholder="City"
                     required
-                  />
+                    disabled={!selectedState}
+                    onValueChange={(value) => {
+                      field.handleChange(value);
+                    }}
+                  >
+                    <SelectTrigger id={field.name}>
+                      <SelectValue
+                        placeholder={
+                          selectedState ? "Select city" : "Select state first"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedState &&
+                        DistrictList[
+                          selectedState as keyof typeof DistrictList
+                        ]?.map((city) => (
+                          <SelectItem key={city} value={city}>
+                            {city}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                   {field.state.meta.touchedErrors ? (
                     <em className="text-xs text-destructive">
                       {field.state.meta.touchedErrors.join(", ")}
