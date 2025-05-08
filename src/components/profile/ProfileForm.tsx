@@ -324,17 +324,25 @@ export function ProfileForm({
               {(field) => (
                 <div>
                   <Label htmlFor={field.name}>State</Label>
-                  <Input
-                    id={field.name}
+                  <Select
                     name={field.name}
                     value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => {
-                      field.handleChange(e.target.value);
-                    }}
-                    placeholder="State"
                     required
-                  />
+                    onValueChange={(value) => {
+                      field.handleChange(value);
+                    }}
+                  >
+                    <SelectTrigger id={field.name}>
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {state.map((state) => (
+                        <SelectItem key={state} value={state}>
+                          {state}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {field.state.meta.touchedErrors ? (
                     <em className="text-xs text-destructive">
                       {field.state.meta.touchedErrors.join(", ")}
