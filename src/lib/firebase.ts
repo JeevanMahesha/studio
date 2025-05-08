@@ -1,19 +1,34 @@
 // src/lib/firebase.ts
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, CollectionReference, DocumentData } from 'firebase/firestore';
-import { Profile, ProfileStatus } from '@/types/profile'; // Ensure correct types are imported
+import { Profile } from "@/types/profile"; // Ensure correct types are imported
+import { getApp, getApps, initializeApp } from "firebase/app";
+import {
+  collection,
+  CollectionReference,
+  DocumentData,
+  getFirestore,
+} from "firebase/firestore";
+import { firebaseConfigEnv } from "../../env";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: firebaseConfigEnv.apiKey,
+  authDomain: firebaseConfigEnv.authDomain,
+  projectId: firebaseConfigEnv.projectId,
+  storageBucket: firebaseConfigEnv.storageBucket,
+  messagingSenderId: firebaseConfigEnv.messagingSenderId,
+  appId: firebaseConfigEnv.appId,
 };
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase with error handling
+let app;
+try {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+  console.log("Firebase initialized successfully");
+} catch (error) {
+  console.error("Error initializing Firebase:", error);
+  throw error;
+}
+
+// Initialize Firestore
 const db = getFirestore(app);
 
 // Helper function to create typed collection references
@@ -22,13 +37,17 @@ const createCollection = <T = DocumentData>(collectionName: string) => {
 };
 
 // Create typed collection references
-const profilesCollection = createCollection<Omit<Profile, 'id' | 'createdAt' | 'updatedAt'> & { createdAt?: any, updatedAt?: any }>('profiles');
-const statusesCollection = createCollection<Omit<ProfileStatus, 'id'>>('statuses');
+const profilesCollection = createCollection<
+  Omit<Profile, "id" | "createdAt" | "updatedAt"> & {
+    createdAt?: any;
+    updatedAt?: any;
+  }
+>("profiles");
 
-
-export { db, profilesCollection, statusesCollection };
+export { db, profilesCollection };
 
 // Log project ID on initialization (optional, for debugging)
-if (typeof window === 'undefined') { // Only log on server-side
-    console.log(`Firebase initialized for project: ${firebaseConfig.projectId}`);
+if (typeof window === "undefined") {
+  // Only log on server-side
+  console.log(`Firebase initialized for project: ${firebaseConfig.projectId}`);
 }
