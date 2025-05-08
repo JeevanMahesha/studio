@@ -74,9 +74,6 @@ export function ProfileForm({
     resolver: zodResolver(ProfileFormSchema),
     defaultValues: {
       name: profile?.name ?? "",
-      email: profile?.email ?? "",
-      phone: profile?.phone ?? "",
-      address: profile?.address ?? "",
       casteRaise: profile?.casteRaise ?? "",
       age: profile?.age ?? 0,
       star: profile?.star ?? "",
@@ -114,25 +111,6 @@ export function ProfileForm({
                   <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="Full Name" required />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="email"
-                      placeholder="Email"
-                      required
-                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
