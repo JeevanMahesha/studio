@@ -32,7 +32,7 @@ import {
   rasiListWithTranslations,
 } from "@/lib/dropDownConstValues";
 import { Profile, ProfileSchema, ProfileStatus } from "@/types/profile";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, X } from "lucide-react";
 
 // Define the schema specifically for the form (excluding server-generated fields like id, createdAt, updatedAt)
 const ProfileFormSchema = ProfileSchema.omit({
@@ -63,15 +63,15 @@ export function ProfileForm({
   const defaultValues = {
     name: profile?.name ?? "",
     casteRaise: profile?.casteRaise ?? "",
-    age: profile?.age ?? 0, // Ensure number type or undefined
+    age: profile?.age ?? 0,
     star: profile?.star ?? "",
     city: profile?.city ?? "",
     state: profile?.state ?? "",
-    starMatchScore: profile?.starMatchScore ?? 0, // Ensure number type or undefined
+    starMatchScore: profile?.starMatchScore ?? 0,
     mobileNumber: profile?.mobileNumber ?? "",
     statusId: profile?.statusId ?? "",
     matrimonyId: profile?.matrimonyId ?? "",
-    comments: profile?.comments ?? "",
+    comments: profile?.comments ?? [],
   };
 
   const form = useForm({
@@ -494,18 +494,51 @@ export function ProfileForm({
             }}
           >
             {(field) => (
-              <div>
+              <div className="space-y-4">
                 <Label htmlFor={field.name}>Comments</Label>
-                <Textarea
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value ?? ""} // Handle potentially undefined value
-                  onBlur={field.handleBlur}
-                  onChange={(e) => {
-                    field.handleChange(e.target.value);
+                <div className="space-y-2">
+                  {(field.state.value || []).map(
+                    (comment: string, index: number) => (
+                      <div key={index} className="flex gap-2 items-start">
+                        <Textarea
+                          value={comment}
+                          onChange={(e) => {
+                            const newComments = [...(field.state.value || [])];
+                            newComments[index] = e.target.value;
+                            field.handleChange(newComments);
+                          }}
+                          placeholder="Enter comment"
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const newComments = [...(field.state.value || [])];
+                            newComments.splice(index, 1);
+                            field.handleChange(newComments);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newComments = [...(field.state.value || []), ""];
+                    field.handleChange(newComments);
                   }}
-                  placeholder="Any additional notes or comments"
-                />
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Comment
+                </Button>
                 {field.state.meta.touchedErrors ? (
                   <em className="text-xs text-destructive">
                     {field.state.meta.touchedErrors.join(", ")}

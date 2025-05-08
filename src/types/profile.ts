@@ -11,33 +11,20 @@ export type ProfileStatus = z.infer<typeof ProfileStatusSchema>;
 // Define Zod schema for Profile
 // Timestamps are handled separately when converting to/from Firestore
 export const ProfileSchema = z.object({
-  id: z.string().optional(), // Optional for creation, comes from Firestore doc ID
+  id: z.string(),
   name: z.string().min(1, "Name is required"),
-  casteRaise: z.string().min(1, "Caste/Raise is required"), // Changed field name for consistency
-  age: z
-    .number()
-    .int()
-    .positive("Age must be a positive number")
-    .min(18, "Age must be at least 18")
-    .optional(),
+  casteRaise: z.string().min(1, "Raise is required"),
+  age: z.number().min(18, "Age must be at least 18"),
   star: z.string().min(1, "Star is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
-  starMatchScore: z
-    .number()
-    .min(0, "Score must be non-negative")
-    .max(10, "Score cannot exceed 10")
-    .optional(), // Assuming a 0-10 score
-  mobileNumber: z
-    .string()
-    .min(10, "Mobile number must be at least 10 digits")
-    .regex(/^\+?[1-9]\d{1,14}$/, "Invalid mobile number format"), // Basic E.164 format check
-  statusId: z.string().min(1, "Status is required"), // Link to ProfileStatus ID (string)
+  starMatchScore: z.number().min(0).max(10),
+  mobileNumber: z.string().min(10, "Mobile number must be at least 10 digits"),
+  statusId: z.string().min(1, "Status is required"),
   matrimonyId: z.string().min(1, "Matrimony ID is required"),
-  comments: z.string().optional(),
-  // Dates are handled during Firestore conversion
-  createdAt: z.date().optional(),
-  updatedAt: z.date().optional(),
+  comments: z.array(z.string()).default([]),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 // Type for client-side use (with Date objects)
