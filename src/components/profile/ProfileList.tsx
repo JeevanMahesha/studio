@@ -42,12 +42,11 @@ const getStatusName = (
   return statuses.find((s) => s.id === profileStatusId)?.name ?? "Unknown";
 };
 
-// Helper to get Tanglish value for casteRaise
-const getTanglishRaise = (casteRaise: string): string => {
+// Helper to get Tanglish value for raise
+const getTanglishRaise = (raise: string): string => {
   return (
-    rasiListWithTranslations[
-      casteRaise as keyof typeof rasiListWithTranslations
-    ]?.tanglish ?? casteRaise
+    rasiListWithTranslations[raise as keyof typeof rasiListWithTranslations]
+      ?.tanglish ?? raise
   );
 };
 
@@ -99,7 +98,7 @@ export function ProfileList({
           <TableRow key={profile.id}>
             <TableCell className="font-medium">{profile.name}</TableCell>
             <TableCell className="hidden md:table-cell">
-              {getTanglishRaise(profile.casteRaise)}
+              {getTanglishRaise(profile.raise)}
             </TableCell>
             <TableCell className="hidden sm:table-cell">
               {profile.city}, {profile.state}

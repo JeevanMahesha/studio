@@ -158,10 +158,8 @@ function ProfileDetailsPageContent() {
               <p>{profile.age}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Caste/Raise
-              </p>
-              <p>{profile.casteRaise}</p>
+              <p className="text-sm font-medium text-muted-foreground">Raise</p>
+              <p>{profile.raise}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Star</p>

@@ -74,7 +74,7 @@ export function ProfileForm({
     resolver: zodResolver(ProfileFormSchema),
     defaultValues: {
       name: profile?.name ?? "",
-      casteRaise: profile?.casteRaise ?? "",
+      raise: profile?.raise ?? "",
       age: profile?.age ?? 0,
       star: profile?.star ?? "",
       city: profile?.city ?? "",
@@ -139,7 +139,7 @@ export function ProfileForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="casteRaise"
+                name="raise"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Raise</FormLabel>

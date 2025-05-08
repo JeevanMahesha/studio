@@ -14,7 +14,7 @@ export const ProfileSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, "Name is required"),
   profileStatusId: z.string().min(1, "Profile Status is required"),
-  casteRaise: z.string().min(1, "Raise is required"),
+  raise: z.string().min(1, "Raise is required"),
   age: z.number().min(18, "Age must be at least 18"),
   star: z.string().min(1, "Star is required"),
   city: z.string().min(1, "City is required"),
