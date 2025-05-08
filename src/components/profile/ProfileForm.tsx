@@ -219,6 +219,16 @@ export function ProfileForm({
                     required
                     onValueChange={(value) => {
                       field.handleChange(value);
+                      // Find the selected star and update the starMatchScore
+                      const selectedStar = star.find(
+                        (s) => s.english === value
+                      );
+                      if (selectedStar) {
+                        form.setFieldValue(
+                          "starMatchScore",
+                          selectedStar.score
+                        );
+                      }
                     }}
                   >
                     <SelectTrigger id={field.name}>
@@ -297,27 +307,14 @@ export function ProfileForm({
                   <Input
                     id={field.name}
                     name={field.name}
-                    value={field.state.value ?? ""} // Handle undefined
-                    onBlur={field.handleBlur}
-                    onChange={(e) => {
-                      const rawValue = e.target.value;
-                      const parsedValue = parseFloat(rawValue);
-                      let valueToSet = 0;
-
-                      if (rawValue !== "") {
-                        valueToSet = isNaN(parsedValue)
-                          ? field.state.value
-                          : parsedValue;
-                      }
-
-                      field.handleChange(valueToSet);
-                    }}
+                    value={field.state.value ?? ""}
+                    disabled
                     type="number"
                     step="0.1"
                     min="0"
                     max="10"
-                    placeholder="e.g., 8"
-                    required
+                    placeholder="Auto-calculated from star"
+                    className="font-bold text-lg bg-muted/50 text-black"
                   />
                   {field.state.meta.touchedErrors ? (
                     <em className="text-xs text-destructive">
