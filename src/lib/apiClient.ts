@@ -106,19 +106,16 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // --- Profile API ---
 
 export const fetchProfiles = async (
-  filters: Record<string, any> = {},
+  _filters: Record<string, any> = {}, // Keep parameter for backward compatibility
   searchTerm: string = "",
   sortBy: string = "name", // Firestore field path
   page: number = 1,
   limitValue: number = 10
-  // lastVisibleDoc: DocumentSnapshot | null = null // Alternative pagination cursor
 ): Promise<{
   data: Profile[];
   total: number;
   lastVisibleDoc?: DocumentSnapshot;
 }> => {
-  // await delay(500); // Simulate latency - Removed for faster debugging
-
   const constraints: QueryConstraint[] = [];
 
   // Search Term Filter (Simple prefix search on 'name')
@@ -128,24 +125,8 @@ export const fetchProfiles = async (
     constraints.push(where("name", "<=", endTerm));
   }
 
-  // Apply other filters
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value !== undefined && value !== "") {
-      if (key === "age" || key === "starMatchScore") {
-        if (typeof value === "number") {
-          constraints.push(where(key, "==", value));
-        }
-      } else {
-        constraints.push(where(key, "==", value));
-      }
-    }
-  });
-
   // --- Total Count ---
-  const countQueryConstraints = constraints.filter(
-    (c) => !c.type.startsWith("orderBy")
-  );
-  const countQuery = query(profilesCollection, ...countQueryConstraints);
+  const countQuery = query(profilesCollection, ...constraints);
   const countSnapshot = await getCountFromServer(countQuery);
   const total = countSnapshot.data().count;
 

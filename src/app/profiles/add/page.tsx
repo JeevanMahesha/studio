@@ -30,9 +30,6 @@ function AddProfilePageContent() {
         description: `Profile for ${data.name} has been successfully created.`,
       });
       queryClient.invalidateQueries({ queryKey: ["profiles"] }); // Refetch profile list
-      queryClient.invalidateQueries({
-        queryKey: ["allProfilesForFilterOptions"],
-      }); // Refetch filter options
       router.push("/"); // Redirect to home page
     },
     onError: (error) => {
