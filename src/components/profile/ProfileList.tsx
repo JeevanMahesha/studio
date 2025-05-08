@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { rasiListWithTranslations } from "@/lib/dropDownConstValues";
 
 interface ProfileListProps {
   profiles: Profile[];
@@ -39,6 +40,15 @@ const getStatusName = (
   statuses: ProfileStatus[]
 ): string => {
   return statuses.find((s) => s.id === profileStatusId)?.name ?? "Unknown";
+};
+
+// Helper to get Tanglish value for casteRaise
+const getTanglishRaise = (casteRaise: string): string => {
+  return (
+    rasiListWithTranslations[
+      casteRaise as keyof typeof rasiListWithTranslations
+    ]?.tanglish ?? casteRaise
+  );
 };
 
 export function ProfileList({
@@ -79,6 +89,8 @@ export function ProfileList({
           <TableHead className="hidden md:table-cell">Caste/Raise</TableHead>
           <TableHead className="hidden sm:table-cell">City</TableHead>
           <TableHead>Profile Status</TableHead>
+          <TableHead>Star</TableHead>
+          <TableHead>Star Match Score</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -87,7 +99,7 @@ export function ProfileList({
           <TableRow key={profile.id}>
             <TableCell className="font-medium">{profile.name}</TableCell>
             <TableCell className="hidden md:table-cell">
-              {profile.casteRaise}
+              {getTanglishRaise(profile.casteRaise)}
             </TableCell>
             <TableCell className="hidden sm:table-cell">
               {profile.city}, {profile.state}
@@ -97,6 +109,8 @@ export function ProfileList({
                 {getStatusName(profile.profileStatusId, statuses)}
               </Badge>
             </TableCell>
+            <TableCell>{profile.star}</TableCell>
+            <TableCell>{profile.starMatchScore}</TableCell>
             <TableCell className="text-right space-x-1">
               <Button variant="ghost" size="icon" asChild>
                 <Link href={`/profiles/${profile.id}`}>
