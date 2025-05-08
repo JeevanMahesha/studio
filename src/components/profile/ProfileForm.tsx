@@ -69,7 +69,7 @@ export function ProfileForm({
     state: profile?.state ?? "",
     starMatchScore: profile?.starMatchScore ?? 0,
     mobileNumber: profile?.mobileNumber ?? "",
-    statusId: profile?.statusId ?? "",
+    statusId: profile?.statusId ?? "1",
     matrimonyId: profile?.matrimonyId ?? "",
     comments: profile?.comments ?? [],
   };
