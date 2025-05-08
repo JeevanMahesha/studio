@@ -109,3 +109,18 @@ export const DistrictList = {
     "Yadgir",
   ],
 } as const;
+
+export const rasiListWithTranslations = {
+  aries: { english: "Aries", tamil: "மேஷம்", tanglish: "Mesham" },
+  taurus: { english: "Taurus", tamil: "ரிஷபம்", tanglish: "Rishabam" },
+  gemini: { english: "Gemini", tamil: "மிதுனம்", tanglish: "Mithunam" },
+  cancer: { english: "Cancer", tamil: "கடகம்", tanglish: "Kadagam" },
+  leo: { english: "Leo", tamil: "சிம்மம்", tanglish: "Simmam" },
+  virgo: { english: "Virgo", tamil: "கன்னி", tanglish: "Kanni" },
+  libra: { english: "Libra", tamil: "துலாம்", tanglish: "Thulaam" },
+  scorpio: { english: "Scorpio", tamil: "விருச்சிகம்", tanglish: "Viruchigam" },
+  sagittarius: { english: "Sagittarius", tamil: "தனுசு", tanglish: "Dhanusu" },
+  capricorn: { english: "Capricorn", tamil: "மகரம்", tanglish: "Makaram" },
+  aquarius: { english: "Aquarius", tamil: "கும்பம்", tanglish: "Kumbam" },
+  pisces: { english: "Pisces", tamil: "மீனம்", tanglish: "Meenam" },
+} as const;

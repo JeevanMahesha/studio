@@ -29,6 +29,7 @@ import {
   DistrictList,
   matchingNakshatraList,
   StateList,
+  rasiListWithTranslations,
 } from "@/lib/dropDownConstValues";
 import { Profile, ProfileSchema, ProfileStatus } from "@/types/profile";
 import { Loader2 } from "lucide-react";
@@ -170,17 +171,30 @@ export function ProfileForm({
               {(field) => (
                 <div>
                   <Label htmlFor={field.name}>Raise</Label>
-                  <Input
-                    id={field.name}
+                  <Select
                     name={field.name}
                     value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => {
-                      field.handleChange(e.target.value);
-                    }}
-                    placeholder="Raise"
                     required
-                  />
+                    onValueChange={(value) => {
+                      field.handleChange(value);
+                    }}
+                  >
+                    <SelectTrigger id={field.name}>
+                      <SelectValue placeholder="Select Raise" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(rasiListWithTranslations).map(
+                        ([key, rasi]: [
+                          string,
+                          (typeof rasiListWithTranslations)[keyof typeof rasiListWithTranslations]
+                        ]) => (
+                          <SelectItem key={key} value={key}>
+                            {rasi.tanglish} ({rasi.english})
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
                   {field.state.meta.touchedErrors ? (
                     <em className="text-xs text-destructive">
                       {field.state.meta.touchedErrors.join(", ")}
@@ -302,7 +316,7 @@ export function ProfileForm({
                     step="0.1"
                     min="0"
                     max="10"
-                    placeholder="e.g., 8.5"
+                    placeholder="e.g., 8"
                     required
                   />
                   {field.state.meta.touchedErrors ? (
