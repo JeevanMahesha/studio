@@ -141,6 +141,7 @@ export function ProfileList({
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead>No</TableHead>
           <TableHead>Name</TableHead>
           <TableHead className="hidden md:table-cell">Raise</TableHead>
           <TableHead className="hidden sm:table-cell">City</TableHead>
@@ -151,8 +152,9 @@ export function ProfileList({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {sortedProfiles.map((profile) => (
+        {sortedProfiles.map((profile, index) => (
           <TableRow key={profile.id}>
+            <TableCell className="font-medium">{index + 1}</TableCell>
             <TableCell className="font-medium">{profile.name}</TableCell>
             <TableCell className="hidden md:table-cell">
               {getTanglishRaise(profile.raise)}
