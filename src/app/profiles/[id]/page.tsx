@@ -217,7 +217,7 @@ function ProfileDetailsPageContent() {
           )}
         </CardContent>
         <CardFooter className="flex justify-between items-center pt-4">
-          <Button variant="outline" size="sm" onClick={() => router.back()}>
+          <Button variant="outline" size="sm" onClick={() => router.push("/")}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <div className="flex gap-2">
@@ -251,7 +251,10 @@ function ProfileDetailsPageContent() {
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel disabled={deleteMutation.isPending}>
+                  <AlertDialogCancel
+                    disabled={deleteMutation.isPending}
+                    onClick={() => router.push("/")}
+                  >
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction

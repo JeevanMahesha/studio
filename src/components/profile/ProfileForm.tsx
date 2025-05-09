@@ -87,14 +87,6 @@ export function ProfileForm({
     },
   });
 
-  const handleCancel = () => {
-    if (profile?.id) {
-      router.push(`/profiles/${profile.id}`); // Go back to details if editing
-    } else {
-      router.push("/"); // Go back home if adding
-    }
-  };
-
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -443,7 +435,7 @@ export function ProfileForm({
             <Button
               type="button"
               variant="outline"
-              onClick={handleCancel}
+              onClick={() => router.push("/")}
               disabled={isSubmitting}
             >
               Cancel

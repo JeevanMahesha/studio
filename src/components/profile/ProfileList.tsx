@@ -42,6 +42,34 @@ const getStatusName = (
   return statuses.find((s) => s.id === profileStatusId)?.name ?? "Unknown";
 };
 
+// Helper to get badge variant based on status
+const getStatusVariant = (
+  statusId: string
+):
+  | "default"
+  | "secondary"
+  | "destructive"
+  | "outline"
+  | "success"
+  | "warning" => {
+  switch (statusId) {
+    case "1": // New
+      return "default";
+    case "2": // Contacted
+      return "warning";
+    case "3": // Meeting Scheduled
+      return "outline";
+    case "4": // Rejected
+      return "destructive";
+    case "5": // Accepted
+      return "success";
+    case "6": // On Hold
+      return "secondary";
+    default:
+      return "secondary";
+  }
+};
+
 // Helper to get Tanglish value for raise
 const getTanglishRaise = (raise: string): string => {
   return (
@@ -50,18 +78,47 @@ const getTanglishRaise = (raise: string): string => {
   );
 };
 
+// Helper to get status priority for sorting
+const getStatusPriority = (statusId: string): number => {
+  switch (statusId) {
+    case "1": // New
+      return 1;
+    case "2": // Contacted
+      return 2;
+    case "3": // Meeting Scheduled
+      return 3;
+    case "4": // Rejected
+      return 5;
+    case "5": // Accepted
+      return 4;
+    case "6": // On Hold
+      return 6;
+    default:
+      return 999;
+  }
+};
+
 export function ProfileList({
   profiles,
   statuses,
   onDelete,
   isLoading,
 }: ProfileListProps) {
-  const [isDeleting, setIsDeleting] = React.useState<string | null>(null); // Track which profile is being deleted
+  const [isDeleting, setIsDeleting] = React.useState<string | null>(null);
+
+  // Sort profiles based on status priority
+  const sortedProfiles = React.useMemo(() => {
+    return [...profiles].sort((a, b) => {
+      const priorityA = getStatusPriority(a.profileStatusId);
+      const priorityB = getStatusPriority(b.profileStatusId);
+      return priorityA - priorityB;
+    });
+  }, [profiles]);
 
   const handleDeleteConfirm = async (id: string) => {
     setIsDeleting(id);
     await onDelete(id);
-    setIsDeleting(null); // Reset after deletion attempt
+    setIsDeleting(null);
   };
 
   if (isLoading) {
@@ -69,7 +126,7 @@ export function ProfileList({
       <div className="flex justify-center items-center h-40">
         Loading profiles...
       </div>
-    ); // Basic loading indicator
+    );
   }
 
   if (!profiles || profiles.length === 0) {
@@ -85,7 +142,7 @@ export function ProfileList({
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
-          <TableHead className="hidden md:table-cell">Caste/Raise</TableHead>
+          <TableHead className="hidden md:table-cell">Raise</TableHead>
           <TableHead className="hidden sm:table-cell">City</TableHead>
           <TableHead>Profile Status</TableHead>
           <TableHead>Star</TableHead>
@@ -94,7 +151,7 @@ export function ProfileList({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {profiles.map((profile) => (
+        {sortedProfiles.map((profile) => (
           <TableRow key={profile.id}>
             <TableCell className="font-medium">{profile.name}</TableCell>
             <TableCell className="hidden md:table-cell">
@@ -104,7 +161,7 @@ export function ProfileList({
               {profile.city}, {profile.state}
             </TableCell>
             <TableCell>
-              <Badge variant="secondary">
+              <Badge variant={getStatusVariant(profile.profileStatusId)}>
                 {getStatusName(profile.profileStatusId, statuses)}
               </Badge>
             </TableCell>
