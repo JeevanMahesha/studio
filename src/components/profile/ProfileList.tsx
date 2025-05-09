@@ -42,6 +42,34 @@ const getStatusName = (
   return statuses.find((s) => s.id === profileStatusId)?.name ?? "Unknown";
 };
 
+// Helper to get badge variant based on status
+const getStatusVariant = (
+  statusId: string
+):
+  | "default"
+  | "secondary"
+  | "destructive"
+  | "outline"
+  | "success"
+  | "warning" => {
+  switch (statusId) {
+    case "1": // New
+      return "default";
+    case "2": // Contacted
+      return "warning";
+    case "3": // Meeting Scheduled
+      return "outline";
+    case "4": // Rejected
+      return "destructive";
+    case "5": // Accepted
+      return "success";
+    case "6": // On Hold
+      return "secondary";
+    default:
+      return "secondary";
+  }
+};
+
 // Helper to get Tanglish value for raise
 const getTanglishRaise = (raise: string): string => {
   return (
@@ -85,7 +113,7 @@ export function ProfileList({
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
-          <TableHead className="hidden md:table-cell">Caste/Raise</TableHead>
+          <TableHead className="hidden md:table-cell">Raise</TableHead>
           <TableHead className="hidden sm:table-cell">City</TableHead>
           <TableHead>Profile Status</TableHead>
           <TableHead>Star</TableHead>
@@ -104,7 +132,7 @@ export function ProfileList({
               {profile.city}, {profile.state}
             </TableCell>
             <TableCell>
-              <Badge variant="secondary">
+              <Badge variant={getStatusVariant(profile.profileStatusId)}>
                 {getStatusName(profile.profileStatusId, statuses)}
               </Badge>
             </TableCell>
