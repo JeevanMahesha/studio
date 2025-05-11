@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -26,6 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { deleteProfile, fetchProfileById } from "@/lib/apiClient";
+import { defaultStatuses } from "@/types/profile";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns"; // For formatting dates
 import {
@@ -149,14 +151,32 @@ function ProfileDetailsPageContent() {
       <Card className="w-full max-w-2xl mx-auto shadow-md">
         <CardHeader>
           <CardTitle className="text-2xl">{profile.name}</CardTitle>
-          <CardDescription>Matrimony ID: {profile.matrimonyId}</CardDescription>
+          <CardDescription>
+            Matrimony ID: {profile.matrimonyId}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => {
+                navigator.clipboard.writeText(profile.matrimonyId);
+                toast({
+                  title: "Copied!",
+                  description: "Matrimony ID copied to clipboard",
+                });
+              }}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
               Profile Status
             </span>
-            {/* <Badge variant="secondary" className="text-sm">{getStatusName(profile.profileStatusId)}</Badge> */}
+            <Badge variant="secondary" className="text-sm">
+              {getStatusName(profile.profileStatusId)}
+            </Badge>
           </div>
           <Separator />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
@@ -311,4 +331,8 @@ export default function ProfileDetailsPage() {
       <ProfileDetailsPageContent />
     </Providers>
   );
+}
+function getStatusName(profileStatusId: string): string {
+  const status = defaultStatuses.find((s) => s.id === profileStatusId);
+  return status ? status.name : "Unknown";
 }
