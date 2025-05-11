@@ -28,7 +28,14 @@ import { useToast } from "@/hooks/use-toast";
 import { deleteProfile, fetchProfileById } from "@/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns"; // For formatting dates
-import { AlertTriangle, ArrowLeft, Edit, Loader2, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Copy,
+  Edit,
+  Loader2,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
@@ -183,7 +190,23 @@ function ProfileDetailsPageContent() {
               <p className="text-sm font-medium text-muted-foreground">
                 Mobile Number
               </p>
-              <p>{profile.mobileNumber}</p>
+              <div className="flex items-center gap-2">
+                <p>{profile.mobileNumber}</p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => {
+                    navigator.clipboard.writeText(profile.mobileNumber);
+                    toast({
+                      title: "Copied!",
+                      description: "Mobile number copied to clipboard",
+                    });
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {profile.createdAt && (
