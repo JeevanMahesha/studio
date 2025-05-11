@@ -3,6 +3,10 @@
 import { Providers } from "@/app/providers";
 import { MainLayout } from "@/components/layout/MainLayout";
 import {
+  getStatusName,
+  getStatusVariant,
+} from "@/components/profile/ProfileList";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -174,8 +178,8 @@ function ProfileDetailsPageContent() {
             <span className="text-sm text-muted-foreground">
               Profile Status
             </span>
-            <Badge variant="secondary" className="text-sm">
-              {getStatusName(profile.profileStatusId)}
+            <Badge variant={getStatusVariant(profile.profileStatusId)}>
+              {getStatusName(profile.profileStatusId, defaultStatuses)}
             </Badge>
           </div>
           <Separator />
@@ -331,8 +335,4 @@ export default function ProfileDetailsPage() {
       <ProfileDetailsPageContent />
     </Providers>
   );
-}
-function getStatusName(profileStatusId: string): string {
-  const status = defaultStatuses.find((s) => s.id === profileStatusId);
-  return status ? status.name : "Unknown";
 }

@@ -35,7 +35,7 @@ interface ProfileListProps {
 }
 
 // Helper to get status name from ID
-const getStatusName = (
+export const getStatusName = (
   profileStatusId: string,
   statuses: ProfileStatus[]
 ): string => {
@@ -43,7 +43,7 @@ const getStatusName = (
 };
 
 // Helper to get badge variant based on status
-const getStatusVariant = (
+export const getStatusVariant = (
   statusId: string
 ):
   | "default"
