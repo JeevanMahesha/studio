@@ -38,4 +38,5 @@ export const defaultStatuses: ProfileStatus[] = [
   { id: "4", name: "Rejected" },
   { id: "5", name: "Accepted" },
   { id: "6", name: "On Hold" },
+  { id: "7", name: "Profile Shared" },
 ];
