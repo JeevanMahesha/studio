@@ -51,7 +51,8 @@ export const getStatusVariant = (
   | "destructive"
   | "outline"
   | "success"
-  | "warning" => {
+  | "warning"
+  | "primary" => {
   switch (statusId) {
     case "1": // New
       return "default";
@@ -65,6 +66,8 @@ export const getStatusVariant = (
       return "success";
     case "6": // On Hold
       return "secondary";
+    case "7": // Profile Shared
+      return "primary";
     default:
       return "secondary";
   }
