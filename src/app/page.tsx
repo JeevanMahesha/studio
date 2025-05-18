@@ -8,17 +8,41 @@ import { useToast } from "@/hooks/use-toast";
 import { deleteProfile, fetchProfiles } from "@/lib/apiClient"; // Import seed function
 import { defaultStatuses } from "@/types/profile";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
 import { Providers } from "./providers"; // Import the Providers component
 
 const PROFILES_PER_PAGE = 10;
 
 function HomePageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [sortBy] = React.useState("name"); // Default sort by name
-  const [currentPage, setCurrentPage] = React.useState(1);
+
+  // Get URL parameters
+  const searchTerm = searchParams.get("search") || "";
+  const statusFilter = searchParams.get("status") || null;
+  const currentPage = Number(searchParams.get("page")) || 1;
+  const sortBy = searchParams.get("sort") || "updatedAt";
+
+  // Update URL parameters
+  const updateSearchParams = useCallback(
+    (params: Record<string, string | null>) => {
+      const newParams = new URLSearchParams(searchParams.toString());
+
+      Object.entries(params).forEach(([key, value]) => {
+        if (value === null) {
+          newParams.delete(key);
+        } else {
+          newParams.set(key, value);
+        }
+      });
+
+      router.push(`?${newParams.toString()}`);
+    },
+    [router, searchParams]
+  );
 
   // Fetch profiles based on search, sort, and pagination
   const {
@@ -26,10 +50,17 @@ function HomePageContent() {
     isLoading: isLoadingProfiles,
     error: profilesError,
   } = useQuery({
-    queryKey: ["profiles", searchTerm, sortBy, currentPage, PROFILES_PER_PAGE],
+    queryKey: [
+      "profiles",
+      searchTerm,
+      statusFilter,
+      sortBy,
+      currentPage,
+      PROFILES_PER_PAGE,
+    ],
     queryFn: () =>
       fetchProfiles(
-        {}, // Empty filters object
+        { profileStatusId: statusFilter || null },
         searchTerm,
         sortBy,
         currentPage,
@@ -48,11 +79,10 @@ function HomePageContent() {
           title: "Profile Deleted",
           description: "The profile has been successfully deleted.",
         });
-        // Invalidate queries to refetch data
         queryClient.invalidateQueries({ queryKey: ["profiles"] });
         // Reset to page 1 if the last item on the current page was deleted
         if (profilesData?.data.length === 1 && currentPage > 1) {
-          setCurrentPage(currentPage - 1);
+          updateSearchParams({ page: "1" });
         }
       } else {
         toast({
@@ -73,12 +103,22 @@ function HomePageContent() {
   });
 
   const handleSearchChange = (newSearchTerm: string) => {
-    setSearchTerm(newSearchTerm);
-    setCurrentPage(1); // Reset to first page on search change
+    updateSearchParams({
+      search: newSearchTerm || null,
+      page: "1",
+    });
+  };
+
+  const handleStatusChange = (newStatus: string | null) => {
+    updateSearchParams({
+      status: newStatus,
+      searchTerm: null,
+      page: "1",
+    });
   };
 
   const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
+    updateSearchParams({ page: newPage.toString() });
   };
 
   const handleDeleteProfile = async (id: string) => {
@@ -90,7 +130,13 @@ function HomePageContent() {
 
   return (
     <MainLayout title="Matrimony Profiles" showAddButton={true}>
-      <ProfileFilters onSearchChange={handleSearchChange} />
+      <ProfileFilters
+        onSearchChange={handleSearchChange}
+        onStatusChange={handleStatusChange}
+        statuses={defaultStatuses}
+        initialSearchTerm={searchTerm}
+        initialStatus={statusFilter}
+      />
 
       {profilesError ? (
         <div className="text-destructive text-center">

@@ -106,7 +106,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // --- Profile API ---
 
 export const fetchProfiles = async (
-  _filters: Record<string, any> = {}, // Keep parameter for backward compatibility
+  filters: Record<string, any> = {}, // Keep parameter for backward compatibility
   searchTerm: string = "",
   sortBy: string = "name", // Firestore field path
   page: number = 1,
@@ -117,12 +117,16 @@ export const fetchProfiles = async (
   lastVisibleDoc?: DocumentSnapshot;
 }> => {
   const constraints: QueryConstraint[] = [];
-
   // Search Term Filter (Simple prefix search on 'name')
   if (searchTerm) {
     const endTerm = searchTerm + "\uf8ff";
     constraints.push(where("name", ">=", searchTerm));
     constraints.push(where("name", "<=", endTerm));
+  }
+
+  // Status Filter
+  if (filters.profileStatusId) {
+    constraints.push(where("profileStatusId", "==", filters.profileStatusId));
   }
 
   // --- Total Count ---
