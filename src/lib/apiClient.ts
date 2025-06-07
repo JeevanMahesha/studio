@@ -105,12 +105,15 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // --- Profile API ---
 
+import { PROFILE_STATUS_IDS } from "./filterUtils";
+
 export const fetchProfiles = async (
   filters: Record<string, any> = {}, // Keep parameter for backward compatibility
   searchTerm: string = "",
   sortBy: string = "name", // Firestore field path
   page: number = 1,
-  limitValue: number = 10
+  limitValue: number = 10,
+  includeRejected: boolean = false // New parameter to control whether to include rejected profiles
 ): Promise<{
   data: Profile[];
   total: number;
@@ -127,6 +130,13 @@ export const fetchProfiles = async (
   // Status Filter
   if (filters.profileStatusId) {
     constraints.push(where("profileStatusId", "==", filters.profileStatusId));
+  } else if (!includeRejected) {
+    // By default, exclude rejected profiles unless explicitly requesting a status or includeRejected is true
+    // For inequality filters with ordering, we need to first orderBy the field with inequality
+    constraints.push(
+      where("profileStatusId", "!=", PROFILE_STATUS_IDS.REJECTED)
+    );
+    constraints.push(orderBy("profileStatusId")); // Required when using != with another orderBy
   }
 
   // --- Total Count ---
@@ -135,7 +145,14 @@ export const fetchProfiles = async (
   const total = countSnapshot.data().count;
 
   // --- Fetch Paginated Data ---
-  constraints.push(orderBy(sortBy));
+  // Only add sortBy if it's different from profileStatusId or if we're not using the inequality filter
+  if (
+    filters.profileStatusId ||
+    includeRejected ||
+    sortBy !== "profileStatusId"
+  ) {
+    constraints.push(orderBy(sortBy));
+  }
 
   let paginatedQuery = query(
     profilesCollection,

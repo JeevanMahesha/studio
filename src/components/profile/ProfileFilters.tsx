@@ -1,11 +1,8 @@
-// src/components/profile/ProfileFilters.tsx
 "use client";
 
-import * as React from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FilterX } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -13,7 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { clearProfileFilters } from "@/lib/filterUtils";
 import { ProfileStatus } from "@/types/profile";
+import { FilterX } from "lucide-react";
+import * as React from "react";
 
 interface ProfileFiltersProps {
   onSearchChange: (searchTerm: string) => void;
@@ -35,11 +35,14 @@ export function ProfileFilters({
     initialStatus
   );
 
-  // Update local state when URL parameters change
+  // Update local state when initial values change (synced with localStorage)
   React.useEffect(() => {
     setSearchTerm(initialSearchTerm);
+  }, [initialSearchTerm]);
+
+  React.useEffect(() => {
     setSelectedStatus(initialStatus);
-  }, [initialSearchTerm, initialStatus]);
+  }, [initialStatus]);
 
   const handleSearchTermChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -50,14 +53,32 @@ export function ProfileFilters({
   };
 
   const handleStatusChange = (value: string) => {
-    const newStatus = value === "all" ? null : value;
+    let newStatus: string | null = null;
+
+    if (value === "all") {
+      // Show all active profiles (excluding rejected)
+      newStatus = null;
+    } else if (value === "include-all") {
+      // Special value to indicate we want to include rejected profiles
+      newStatus = "include-all";
+    } else {
+      // Specific status filter
+      newStatus = value;
+    }
+
     setSelectedStatus(newStatus);
     onStatusChange(newStatus);
   };
 
   const clearFilters = () => {
+    // Clear localStorage filters
+    clearProfileFilters();
+
+    // Update component state
     setSearchTerm("");
     setSelectedStatus(null);
+
+    // Notify parent components
     onSearchChange("");
     onStatusChange(null);
   };
@@ -80,14 +101,17 @@ export function ProfileFilters({
         <div>
           <Label htmlFor="statusFilter">Filter by Status</Label>
           <Select
-            value={selectedStatus ?? "all"}
+            value={selectedStatus === null ? "all" : selectedStatus}
             onValueChange={handleStatusChange}
           >
             <SelectTrigger id="statusFilter">
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="all">All Active Profiles</SelectItem>
+              <SelectItem value="include-all">
+                All Profiles (Including Rejected)
+              </SelectItem>
               {statuses.map((status) => (
                 <SelectItem key={status.id} value={status.id}>
                   {status.name}
