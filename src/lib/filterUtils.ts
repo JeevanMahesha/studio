@@ -6,6 +6,17 @@ export const STORAGE_KEYS = {
   SORT_BY: "studio_profile_sort_by",
 };
 
+// Status IDs
+export const PROFILE_STATUS_IDS = {
+  NEW: "1",
+  CONTACTED: "2",
+  MEETING_SCHEDULED: "3",
+  REJECTED: "4",
+  ACCEPTED: "5",
+  ON_HOLD: "6",
+  PROFILE_SHARED: "7",
+};
+
 // Type definition for profile filter state
 export interface ProfileFilterState {
   searchTerm: string;

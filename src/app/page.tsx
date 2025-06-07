@@ -42,14 +42,29 @@ function HomePageContent() {
       currentPage,
       PROFILES_PER_PAGE,
     ],
-    queryFn: () =>
-      fetchProfiles(
-        { profileStatusId: statusFilter || null },
+    queryFn: () => {
+      // Handle the special "include-all" value
+      if (statusFilter === "include-all") {
+        // When "include-all" is selected, pass null as profileStatusId and set includeRejected to true
+        return fetchProfiles(
+          { profileStatusId: null },
+          searchTerm,
+          sortBy,
+          currentPage,
+          PROFILES_PER_PAGE,
+          true // includeRejected = true to show all profiles including rejected
+        );
+      }
+
+      return fetchProfiles(
+        { profileStatusId: statusFilter },
         searchTerm,
         sortBy,
         currentPage,
-        PROFILES_PER_PAGE
-      ),
+        PROFILES_PER_PAGE,
+        statusFilter === "4" // Only include rejected profiles if explicitly filtering for them (REJECTED status ID is '4')
+      );
+    },
     enabled: true,
     placeholderData: (previousData) => previousData,
   });
