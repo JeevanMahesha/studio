@@ -9,7 +9,7 @@ import { deleteProfile, fetchProfiles } from "@/lib/apiClient"; // Import seed f
 import { getProfileFilters, saveProfileFilters } from "@/lib/filterUtils";
 import { defaultStatuses } from "@/types/profile";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Providers } from "./providers"; // Import the Providers component
 
 const PROFILES_PER_PAGE = 10;
@@ -166,7 +166,9 @@ function HomePageContent() {
 export default function Home() {
   return (
     <Providers>
-      <HomePageContent />
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+        <HomePageContent />
+      </Suspense>
     </Providers>
   );
 }
