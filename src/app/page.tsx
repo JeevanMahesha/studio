@@ -6,43 +6,27 @@ import { ProfileFilters } from "@/components/profile/ProfileFilters";
 import { ProfileList } from "@/components/profile/ProfileList";
 import { useToast } from "@/hooks/use-toast";
 import { deleteProfile, fetchProfiles } from "@/lib/apiClient"; // Import seed function
+import { getProfileFilters, saveProfileFilters } from "@/lib/filterUtils";
 import { defaultStatuses } from "@/types/profile";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useState } from "react";
 import { Providers } from "./providers"; // Import the Providers component
 
 const PROFILES_PER_PAGE = 10;
 
 function HomePageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Get URL parameters
-  const searchTerm = searchParams.get("search") || "";
-  const statusFilter = searchParams.get("status") || null;
-  const currentPage = Number(searchParams.get("page")) || 1;
-  const sortBy = searchParams.get("sort") || "updatedAt";
+  // Initialize state from localStorage
+  const [filters, setFilters] = useState(() => getProfileFilters());
+  const { searchTerm, statusFilter, currentPage, sortBy } = filters;
 
-  // Update URL parameters
-  const updateSearchParams = useCallback(
-    (params: Record<string, string | null>) => {
-      const newParams = new URLSearchParams(searchParams.toString());
-
-      Object.entries(params).forEach(([key, value]) => {
-        if (value === null) {
-          newParams.delete(key);
-        } else {
-          newParams.set(key, value);
-        }
-      });
-
-      router.push(`?${newParams.toString()}`);
-    },
-    [router, searchParams]
-  );
+  // Update filters in state and localStorage
+  const updateFilters = (newFilters: Partial<typeof filters>) => {
+    const updatedFilters = saveProfileFilters(newFilters);
+    setFilters(updatedFilters);
+  };
 
   // Fetch profiles based on search, sort, and pagination
   const {
@@ -82,7 +66,7 @@ function HomePageContent() {
         queryClient.invalidateQueries({ queryKey: ["profiles"] });
         // Reset to page 1 if the last item on the current page was deleted
         if (profilesData?.data.length === 1 && currentPage > 1) {
-          updateSearchParams({ page: "1" });
+          updateFilters({ currentPage: 1 });
         }
       } else {
         toast({
@@ -103,22 +87,22 @@ function HomePageContent() {
   });
 
   const handleSearchChange = (newSearchTerm: string) => {
-    updateSearchParams({
-      search: newSearchTerm || null,
-      page: "1",
+    updateFilters({
+      searchTerm: newSearchTerm,
+      currentPage: 1,
     });
   };
 
   const handleStatusChange = (newStatus: string | null) => {
-    updateSearchParams({
-      status: newStatus,
-      searchTerm: null,
-      page: "1",
+    updateFilters({
+      statusFilter: newStatus,
+      searchTerm: "",
+      currentPage: 1,
     });
   };
 
   const handlePageChange = (newPage: number) => {
-    updateSearchParams({ page: newPage.toString() });
+    updateFilters({ currentPage: newPage });
   };
 
   const handleDeleteProfile = async (id: string) => {

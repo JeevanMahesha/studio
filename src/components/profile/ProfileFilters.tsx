@@ -1,4 +1,3 @@
-// src/components/profile/ProfileFilters.tsx
 "use client";
 
 import * as React from "react";
@@ -14,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ProfileStatus } from "@/types/profile";
+import { clearProfileFilters } from "@/lib/filterUtils";
 
 interface ProfileFiltersProps {
   onSearchChange: (searchTerm: string) => void;
@@ -35,11 +35,14 @@ export function ProfileFilters({
     initialStatus
   );
 
-  // Update local state when URL parameters change
+  // Update local state when initial values change (synced with localStorage)
   React.useEffect(() => {
     setSearchTerm(initialSearchTerm);
+  }, [initialSearchTerm]);
+
+  React.useEffect(() => {
     setSelectedStatus(initialStatus);
-  }, [initialSearchTerm, initialStatus]);
+  }, [initialStatus]);
 
   const handleSearchTermChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -56,8 +59,14 @@ export function ProfileFilters({
   };
 
   const clearFilters = () => {
+    // Clear localStorage filters
+    clearProfileFilters();
+
+    // Update component state
     setSearchTerm("");
     setSelectedStatus(null);
+
+    // Notify parent components
     onSearchChange("");
     onStatusChange(null);
   };
